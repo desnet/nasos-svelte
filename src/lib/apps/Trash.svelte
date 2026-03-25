@@ -1,0 +1,112 @@
+<script lang="ts">
+	let items = $state([
+		{ name: 'old_report.docx', icon: '📄', deleted: '20.03.2026' },
+		{ name: 'temp_file.tmp', icon: '📄', deleted: '22.03.2026' },
+		{ name: 'backup_2025', icon: '📁', deleted: '15.03.2026' }
+	])
+
+	function restore(name: string) {
+		items = items.filter((i) => i.name !== name)
+	}
+
+	function clear() {
+		items = []
+	}
+</script>
+
+<div class="trash">
+	<div class="toolbar">
+		<button onclick={clear} disabled={items.length === 0}>🗑️ Очистить корзину</button>
+		<span class="count">{items.length} объект(ов)</span>
+	</div>
+
+	{#if items.length === 0}
+		<div class="empty">
+			<span class="empty-icon">🗑️</span>
+			<p>Корзина пуста</p>
+		</div>
+	{:else}
+		<div class="list">
+			{#each items as item (item.name)}
+				<div class="item">
+					<span class="icon">{item.icon}</span>
+					<span class="name">{item.name}</span>
+					<span class="date">{item.deleted}</span>
+					<button class="restore-btn" onclick={() => restore(item.name)}>↩ Восстановить</button>
+				</div>
+			{/each}
+		</div>
+	{/if}
+</div>
+
+<style>
+	.trash {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		font-size: 13px;
+	}
+
+	.toolbar {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 6px 10px;
+		background: #f0f0f0;
+		border-bottom: 1px solid #ddd;
+	}
+
+	.toolbar button {
+		padding: 3px 10px;
+		border: 1px solid #bbb;
+		border-radius: 3px;
+		background: white;
+		cursor: pointer;
+		font-size: 12px;
+	}
+	.toolbar button:disabled { opacity: 0.4; cursor: default; }
+	.toolbar button:hover:not(:disabled) { background: #ffe0e0; }
+
+	.count { font-size: 11px; color: #666; }
+
+	.empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		flex: 1;
+		color: #aaa;
+		gap: 8px;
+	}
+	.empty-icon { font-size: 48px; }
+	.empty p { margin: 0; }
+
+	.list {
+		flex: 1;
+		overflow-y: auto;
+		padding: 4px;
+	}
+
+	.item {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 6px 10px;
+		border-radius: 4px;
+	}
+	.item:hover { background: #f5f5f5; }
+
+	.icon { font-size: 18px; }
+	.name { flex: 1; }
+	.date { color: #999; font-size: 11px; }
+
+	.restore-btn {
+		padding: 2px 8px;
+		border: 1px solid #bbb;
+		border-radius: 3px;
+		background: white;
+		cursor: pointer;
+		font-size: 11px;
+	}
+	.restore-btn:hover { background: #e0f0e0; }
+</style>
