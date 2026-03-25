@@ -23,6 +23,7 @@ export const WIDGET_SIZES: Record<WidgetType, { w: number; h: number }> = {
 }
 
 const GRID = 20
+const GAP = 8        // отступ между виджетами
 const TASKBAR_H = 48
 
 function snap(v: number) {
@@ -36,7 +37,7 @@ function overlaps(
 	return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by
 }
 
-// Ищет ближайшую свободную позицию по сетке методом BFS-спирали
+// Ищет ближайшую свободную позицию, предпочитая точные стековые позиции (o.y + o.h + GAP)
 function findFreePos(
 	wantX: number,
 	wantY: number,
@@ -48,23 +49,54 @@ function findFreePos(
 	const vw = typeof window !== 'undefined' ? window.innerWidth : 1280
 	const vh = typeof window !== 'undefined' ? window.innerHeight : 800
 
-	const maxX = Math.max(0, vw - w)
-	const maxY = Math.max(0, vh - TASKBAR_H - h)
+	const minY = snap(44)  // 40px
+	const maxX = Math.max(0,    vw - w)
+	const maxY = Math.max(minY, vh - TASKBAR_H - h)
+
+	const relevant = others.filter((o) => o.id !== excludeId)
 
 	const isFree = (cx: number, cy: number) =>
-		others.every((o) => {
-			if (o.id === excludeId) return true
+		relevant.every((o) => {
 			const s = WIDGET_SIZES[o.type]
-			return !overlaps(cx, cy, w, h, o.x, o.y, s.w, s.h)
+			return !overlaps(cx, cy, w, h, o.x - GAP, o.y - GAP, s.w + GAP * 2, s.h + GAP * 2)
 		})
 
-	// Поиск по расширяющейся спирали вокруг желаемой позиции
+	// Кандидаты по Y: запрошенная позиция + точные стековые позиции относительно существующих виджетов
+	function candidateYs(): number[] {
+		const ys = new Set<number>()
+		ys.add(Math.max(minY, Math.min(snap(wantY), maxY)))
+		for (const o of relevant) {
+			const s = WIDGET_SIZES[o.type]
+			const below = o.y + s.h + GAP
+			if (below <= maxY) ys.add(below)
+			const above = o.y - GAP - h
+			if (above >= minY) ys.add(above)
+		}
+		// сортировка по близости к запрошенной позиции
+		return Array.from(ys).sort((a, b) => Math.abs(a - wantY) - Math.abs(b - wantY))
+	}
+
+	// Кандидаты по X: запрошенная, затем расширение колонками шириной (w + GAP)
+	const xCandidates: number[] = [snap(wantX)]
+	for (let i = 1; i <= 15; i++) {
+		xCandidates.push(snap(wantX + i * (w + GAP)))
+		xCandidates.push(snap(wantX - i * (w + GAP)))
+	}
+
+	for (const cx of xCandidates) {
+		if (cx < 0 || cx > maxX) continue
+		for (const cy of candidateYs()) {
+			if (isFree(cx, cy)) return { x: cx, y: cy }
+		}
+	}
+
+	// Запасной вариант: BFS-спираль по грубой сетке
 	for (let radius = 0; radius <= 20; radius++) {
 		for (let dx = -radius; dx <= radius; dx++) {
 			for (let dy = -radius; dy <= radius; dy++) {
 				if (Math.abs(dx) !== radius && Math.abs(dy) !== radius) continue
-				const cx = Math.max(0, Math.min(snap(wantX + dx * GRID), maxX))
-				const cy = Math.max(0, Math.min(snap(wantY + dy * GRID), maxY))
+				const cx = Math.max(0,    Math.min(snap(wantX + dx * GRID), maxX))
+				const cy = Math.max(minY, Math.min(snap(wantY + dy * GRID), maxY))
 				if (isFree(cx, cy)) return { x: cx, y: cy }
 			}
 		}
@@ -77,8 +109,8 @@ function createWidgets() {
 	const vw = typeof window !== 'undefined' ? window.innerWidth : 1280
 
 	let list = $state<WidgetDef[]>([
-		{ id: 1, type: 'clock',    x: snap(vw - 220), y: snap(16)  },
-		{ id: 2, type: 'calendar', x: snap(vw - 220), y: snap(16) + WIDGET_SIZES.clock.h + GRID }
+		{ id: 1, type: 'clock',    x: snap(vw - 220), y: snap(44) },
+		{ id: 2, type: 'calendar', x: snap(vw - 220), y: snap(44) + WIDGET_SIZES.clock.h + GAP }
 	])
 	let nextId = $state(3)
 

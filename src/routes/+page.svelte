@@ -44,7 +44,9 @@
 
 	const ICON_W = 88
 	const ICON_H = 88
-	const PAD = 16
+	const PAD_X = 16
+	const PAD_Y = 44    // отступ сверху = menu bar (28px) + padding (16px)
+	const DOCK_H = 88   // высота dock + отступ снизу
 	const DRAG_THRESHOLD = 5
 	const GRID_W = ICON_W + 8
 	const GRID_H = ICON_H + 8
@@ -54,7 +56,7 @@
 	function snapToGrid(x: number, y: number): IconPos {
 		return {
 			x: Math.round(x / GRID_W) * GRID_W,
-			y: Math.round(y / GRID_H) * GRID_H
+			y: PAD_Y + Math.round(Math.max(0, y - PAD_Y) / GRID_H) * GRID_H
 		}
 	}
 
@@ -62,7 +64,7 @@
 		Object.fromEntries(
 			desktop.desktopIcons.map((icon, i) => [
 				icon.id,
-				snapToGrid(PAD, PAD + i * GRID_H)
+				snapToGrid(PAD_X, PAD_Y + i * GRID_H)
 			])
 		)
 	)
@@ -105,7 +107,7 @@
 			if (icon.id in result) continue
 			let placed = false
 			for (let i = 0; i < 30 && !placed; i++) {
-				const pos = snapToGrid(PAD, PAD + i * GRID_H)
+				const pos = snapToGrid(PAD_X, PAD_Y + i * GRID_H)
 				const key = `${pos.x},${pos.y}`
 				if (!used.has(key)) {
 					result[icon.id] = pos
@@ -113,7 +115,7 @@
 					placed = true
 				}
 			}
-			if (!placed) result[icon.id] = snapToGrid(PAD, PAD)
+			if (!placed) result[icon.id] = snapToGrid(PAD_X, PAD_Y)
 		}
 
 		return result
@@ -141,7 +143,7 @@
 		if (!hasMoved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return
 		hasMoved = true
 		const newX = Math.max(0, Math.min(e.clientX - dragOffsetX, window.innerWidth - ICON_W))
-		const newY = Math.max(0, Math.min(e.clientY - dragOffsetY, window.innerHeight - ICON_H - 48))
+		const newY = Math.max(PAD_Y, Math.min(e.clientY - dragOffsetY, window.innerHeight - ICON_H - DOCK_H))
 		iconPositions = { ...iconPositions, [draggingId]: { x: newX, y: newY } }
 	}
 
@@ -150,7 +152,7 @@
 			const rawX = e.clientX - dragOffsetX
 			const rawY = e.clientY - dragOffsetY
 			const clampedX = Math.max(0, Math.min(rawX, window.innerWidth - ICON_W))
-			const clampedY = Math.max(0, Math.min(rawY, window.innerHeight - ICON_H - 48))
+			const clampedY = Math.max(PAD_Y, Math.min(rawY, window.innerHeight - ICON_H - DOCK_H))
 			iconPositions = { ...iconPositions, [draggingId]: snapToGrid(clampedX, clampedY) }
 		}
 		draggingId = null
@@ -269,26 +271,18 @@
 		margin: 0;
 		padding: 0;
 		overflow: hidden;
-		font-family: 'Segoe UI', 'Arial', sans-serif;
+		font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', sans-serif;
 	}
 
 	.desktop {
 		width: 100vw;
 		height: 100vh;
-		background: #0d2137; /* перекрывается inline style из wallpaperStore */
+		background: #0d2137;
 		transition: background 0.5s ease;
 		position: relative;
 		overflow: hidden;
-	}
-
-	.desktop::before {
-		content: '';
-		position: absolute;
-		inset: 0;
-		background:
-			radial-gradient(circle at 20% 30%, rgba(74, 144, 217, 0.15) 0%, transparent 50%),
-			radial-gradient(circle at 80% 70%, rgba(44, 111, 173, 0.12) 0%, transparent 50%);
-		pointer-events: none;
+		padding-top: 28px;
+		box-sizing: border-box;
 	}
 
 	.desktop-icon {
@@ -296,34 +290,34 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 4px;
-		width: 72px;
-		padding: 8px 4px;
-		border-radius: 6px;
+		gap: 5px;
+		width: 76px;
+		padding: 8px 4px 6px;
+		border-radius: 10px;
 		cursor: pointer;
-		border: 2px solid transparent;
+		border: 1.5px solid transparent;
 		user-select: none;
-		transition: background 0.1s;
+		transition: background 0.12s;
 		z-index: 10;
 	}
 
-	.desktop-icon:hover { background: rgba(255, 255, 255, 0.12); }
+	.desktop-icon:hover { background: rgba(255, 255, 255, 0.14); }
 
 	.desktop-icon.selected {
-		background: rgba(74, 144, 217, 0.3);
-		border-color: rgba(74, 144, 217, 0.7);
+		background: rgba(255, 255, 255, 0.18);
+		border-color: rgba(255, 255, 255, 0.45);
 	}
 
 	.desktop-icon.dragging {
-		opacity: 0.8;
+		opacity: 0.85;
 		cursor: grabbing;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
 		z-index: 9998;
 	}
 
 	.di-icon {
-		font-size: 36px;
-		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+		font-size: 40px;
+		filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.55));
 		pointer-events: none;
 	}
 
@@ -331,9 +325,12 @@
 		font-size: 11px;
 		color: white;
 		text-align: center;
-		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 		word-break: break-word;
 		line-height: 1.3;
 		pointer-events: none;
+		padding: 1px 4px;
+		border-radius: 4px;
+		background: rgba(0, 0, 0, 0.22);
 	}
 </style>

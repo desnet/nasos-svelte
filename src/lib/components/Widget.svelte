@@ -43,8 +43,8 @@
 		const dy = e.clientY - dragStartY
 		if (!hasMoved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return
 		hasMoved = true
-		dragX = Math.max(0, Math.min(e.clientX - dragOffsetX, window.innerWidth - 200))
-		dragY = Math.max(0, Math.min(e.clientY - dragOffsetY, window.innerHeight - 80))
+		dragX = Math.max(0,  Math.min(e.clientX - dragOffsetX, window.innerWidth - 200))
+		dragY = Math.max(44, Math.min(e.clientY - dragOffsetY, window.innerHeight - 80))
 	}
 
 	function onMouseup(e: MouseEvent) {

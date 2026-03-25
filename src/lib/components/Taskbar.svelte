@@ -2,300 +2,353 @@
 	import { desktop } from '$lib/stores/desktop.svelte'
 
 	let now = $state(new Date())
-	let showStart = $state(false)
+	let showLauncher = $state(false)
 
-	setInterval(() => {
-		now = new Date()
-	}, 1000)
+	setInterval(() => { now = new Date() }, 1000)
 
-	const hours = $derived(now.toLocaleTimeString('ru-RU', { hour: '2-digit' }))
-	const minutes = $derived(now.toLocaleTimeString('ru-RU', { minute: '2-digit' }))
-	const seconds = $derived(now.toLocaleTimeString('ru-RU', { second: '2-digit' }))
-	const blink = $derived(now.getSeconds() % 2 === 0)
-	const date = $derived(
-		now.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
-	)
+	const timeStr = $derived(now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }))
+	const dateStr = $derived(now.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' }))
 
-	const startApps = [
-		{ label: 'Проводник', icon: '📁', app: 'explorer' },
-		{ label: 'Блокнот', icon: '📝', app: 'notepad' },
-		{ label: 'Магазин', icon: '🏪', app: 'appstore' },
-		{ label: 'Обо мне', icon: '💻', app: 'about' },
-		{ label: 'Корзина', icon: '🗑️', app: 'trash' }
+	const launcherApps = [
+		{ label: 'Проводник', icon: '📁', app: 'explorer'   },
+		{ label: 'Блокнот',   icon: '📝', app: 'notepad'    },
+		{ label: 'Магазин',   icon: '🏪', app: 'appstore'   },
+		{ label: 'Обо мне',   icon: '💻', app: 'about'      },
+		{ label: 'Обои',      icon: '🖼️', app: 'wallpapers' },
+		{ label: 'Корзина',   icon: '🗑️', app: 'trash'      }
 	]
 
-	function clickApp(app: string) {
+	function openApp(app: string) {
 		desktop.openApp(app)
-		showStart = false
+		showLauncher = false
 	}
 
-	function toggleStart(e: MouseEvent) {
-		e.stopPropagation()
-		showStart = !showStart
-	}
-
-	function taskbarClick(w: (typeof desktop.windows)[number]) {
-		if (w.minimized) {
-			desktop.restoreWindow(w.id)
-		} else if (w.focused) {
-			desktop.minimizeWindow(w.id)
-		} else {
-			desktop.focusWindow(w.id)
-		}
+	function dockClick(w: (typeof desktop.windows)[number]) {
+		if (w.minimized) desktop.restoreWindow(w.id)
+		else if (w.focused) desktop.minimizeWindow(w.id)
+		else desktop.focusWindow(w.id)
 	}
 </script>
 
-<svelte:window onclick={() => (showStart = false)} />
+<svelte:window onclick={() => (showLauncher = false)} />
 
-<!-- Start menu -->
-{#if showStart}
-	<div class="start-menu" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()} role="menu" tabindex="0">
-		<div class="start-header">
-			<span class="start-logo">🖥️</span>
-			<div>
-				<div class="start-name">NasOS</div>
-				<div class="start-sub">Главное меню</div>
-			</div>
-		</div>
-		<div class="start-apps">
-			{#each startApps as a (a.app)}
-				<button class="start-app" onclick={() => clickApp(a.app)}>
-					<span class="sa-icon">{a.icon}</span>
-					<span>{a.label}</span>
-				</button>
-			{/each}
-		</div>
-		<div class="start-footer">
-			<button class="start-power" onclick={() => (showStart = false)}>⏻ Выключить</button>
-		</div>
-	</div>
-{/if}
-
-<div class="taskbar">
-	<!-- Start button -->
-	<button class="start-btn" class:active={showStart} onclick={toggleStart}>
-		🖥️ Пуск
-	</button>
-
-	<!-- Divider -->
-	<div class="divider"></div>
-
-	<!-- Running windows -->
-	<div class="tasks">
-		{#each desktop.windows as w (w.id)}
-			<button
-				class="task-btn"
-				class:active={w.focused && !w.minimized}
-				class:minimized={w.minimized}
-				onclick={() => taskbarClick(w)}
-				title={w.title}
-			>
-				<span>{w.icon}</span>
-				<span class="task-label">{w.title}</span>
-			</button>
-		{/each}
-	</div>
-
-	<!-- Tray -->
-	<div class="tray">
+<!-- ===== Menu bar (top) ===== -->
+<div class="menubar">
+	<span class="menubar-logo">NasOS</span>
+	<div class="menubar-tray">
 		<span class="tray-icon" title="Сеть">🌐</span>
 		<span class="tray-icon" title="Звук">🔊</span>
-		<div class="clock">
-			<span class="time">
-				{hours}<span class="colon" class:dim={blink}>:</span>{minutes}<span class="colon" class:dim={blink}>:</span><span class="secs">{seconds}</span>
-			</span>
-			<span class="date-small">{date}</span>
+		<div class="menubar-clock">
+			<span class="clock-time">{timeStr}</span>
+			<span class="clock-date">{dateStr}</span>
 		</div>
 	</div>
 </div>
 
+<!-- ===== Launcher overlay ===== -->
+{#if showLauncher}
+	<div
+		class="launcher-overlay"
+		onclick={() => (showLauncher = false)}
+		onkeydown={(e) => e.key === 'Escape' && (showLauncher = false)}
+		role="presentation"
+	>
+		<div
+			class="launcher"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+			role="menu"
+			tabindex="0"
+		>
+			<div class="launcher-title">Приложения</div>
+			<div class="launcher-grid">
+				{#each launcherApps as a (a.app)}
+					<button class="launcher-app" onclick={() => openApp(a.app)}>
+						<span class="la-icon">{a.icon}</span>
+						<span class="la-label">{a.label}</span>
+					</button>
+				{/each}
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- ===== Dock (bottom) ===== -->
+<div class="dock-wrap">
+	<div class="dock">
+		<!-- Launchpad -->
+		<button
+			class="dock-item launcher-btn"
+			class:dock-active={showLauncher}
+			onclick={(e) => { e.stopPropagation(); showLauncher = !showLauncher }}
+			title="Приложения"
+		>
+			<span class="dock-icon launchpad-icon">
+				<span></span><span></span>
+				<span></span><span></span>
+			</span>
+			{#if showLauncher}<div class="dock-dot"></div>{/if}
+		</button>
+
+		{#if desktop.windows.length > 0}
+			<div class="dock-sep"></div>
+
+			{#each desktop.windows as w (w.id)}
+				<button
+					class="dock-item"
+					class:dock-active={w.focused && !w.minimized}
+					class:dock-minimized={w.minimized}
+					onclick={() => dockClick(w)}
+					title={w.title}
+				>
+					<span class="dock-icon">{w.icon}</span>
+					<span class="dock-label">{w.title}</span>
+					<div class="dock-dot" class:hidden={w.minimized}></div>
+				</button>
+			{/each}
+		{/if}
+	</div>
+</div>
+
 <style>
-	.start-menu {
+	/* ===== Menu bar ===== */
+	.menubar {
 		position: fixed;
-		bottom: 52px;
-		left: 4px;
-		width: 240px;
-		background: #1e1e2e;
-		color: white;
-		border-radius: 8px 8px 0 8px;
-		box-shadow: 4px -4px 24px rgba(0, 0, 0, 0.5);
-		z-index: 10000;
-		overflow: hidden;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.start-header {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		padding: 16px;
-		background: #2a2a3e;
-	}
-	.start-logo { font-size: 28px; }
-	.start-name { font-size: 15px; font-weight: 700; }
-	.start-sub { font-size: 11px; color: #aaa; }
-
-	.start-apps {
-		padding: 8px;
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	.start-app {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		padding: 10px 12px;
-		background: transparent;
-		border: none;
-		color: white;
-		border-radius: 6px;
-		cursor: pointer;
-		font-size: 13px;
-		text-align: left;
-		width: 100%;
-	}
-	.start-app:hover { background: rgba(255,255,255,0.1); }
-	.sa-icon { font-size: 18px; }
-
-	.start-footer {
-		padding: 8px;
-		border-top: 1px solid rgba(255,255,255,0.1);
-	}
-	.start-power {
-		width: 100%;
-		padding: 8px;
-		background: rgba(255,60,60,0.2);
-		border: none;
-		color: #ff8080;
-		border-radius: 6px;
-		cursor: pointer;
-		font-size: 12px;
-	}
-	.start-power:hover { background: rgba(255,60,60,0.4); }
-
-	/* Taskbar */
-	.taskbar {
-		position: fixed;
-		bottom: 0;
+		top: 0;
 		left: 0;
 		right: 0;
-		height: 48px;
-		background: linear-gradient(to bottom, #2a2a3e, #1a1a2e);
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		padding: 0 6px;
-		z-index: 9999;
-		box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.4);
-	}
-
-	.start-btn {
-		height: 36px;
-		padding: 0 16px;
-		background: linear-gradient(to bottom, #4a90d9, #2c6fad);
-		color: white;
-		border: none;
-		border-radius: 4px;
-		cursor: pointer;
-		font-size: 13px;
-		font-weight: 600;
-		white-space: nowrap;
-		flex-shrink: 0;
-	}
-	.start-btn:hover { filter: brightness(1.15); }
-	.start-btn.active { background: linear-gradient(to bottom, #2c6fad, #1a4f80); }
-
-	.divider {
-		width: 1px;
 		height: 28px;
-		background: rgba(255,255,255,0.2);
-		flex-shrink: 0;
-		margin: 0 2px;
-	}
-
-	.tasks {
-		display: flex;
-		gap: 4px;
-		flex: 1;
-		overflow: hidden;
-	}
-
-	.task-btn {
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		height: 36px;
-		padding: 0 10px;
-		background: rgba(255,255,255,0.08);
-		border: 1px solid rgba(255,255,255,0.15);
-		color: white;
-		border-radius: 4px;
-		cursor: pointer;
-		font-size: 12px;
-		max-width: 160px;
-		overflow: hidden;
-		flex-shrink: 0;
-	}
-	.task-btn:hover { background: rgba(255,255,255,0.18); }
-	.task-btn.active {
-		background: rgba(74,144,217,0.4);
-		border-color: #4a90d9;
-		box-shadow: inset 0 -2px 0 #4a90d9;
-	}
-	.task-btn.minimized { opacity: 0.6; }
-
-	.task-label {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		justify-content: space-between;
+		padding: 0 16px;
+		background: rgba(30, 30, 46, 0.82);
+		backdrop-filter: blur(24px);
+		-webkit-backdrop-filter: blur(24px);
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		z-index: 10000;
+		user-select: none;
 	}
 
-	.tray {
+	.menubar-logo {
+		font-size: 13px;
+		font-weight: 700;
+		color: rgba(255, 255, 255, 0.9);
+		letter-spacing: 0.4px;
+	}
+
+	.menubar-tray {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.tray-icon { font-size: 14px; cursor: default; }
+
+	.menubar-clock {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		flex-shrink: 0;
-		padding-left: 8px;
-		border-left: 1px solid rgba(255,255,255,0.15);
-	}
-
-	.tray-icon {
-		font-size: 16px;
 		cursor: default;
 	}
 
-	.clock {
+	.clock-time {
+		font-size: 12px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.9);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.clock-date {
+		font-size: 11px;
+		color: rgba(255, 255, 255, 0.5);
+	}
+
+	/* ===== Launcher ===== */
+	.launcher-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 9500;
+		background: rgba(0, 0, 0, 0.25);
+		backdrop-filter: blur(4px);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.launcher {
+		background: rgba(28, 28, 42, 0.94);
+		backdrop-filter: blur(40px);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 16px;
+		padding: 24px;
+		box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+		min-width: 320px;
+	}
+
+	.launcher-title {
+		font-size: 12px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.4);
+		text-transform: uppercase;
+		letter-spacing: 1px;
+		margin-bottom: 16px;
+	}
+
+	.launcher-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 8px;
+	}
+
+	.launcher-app {
 		display: flex;
 		flex-direction: column;
-		align-items: flex-end;
-		cursor: default;
-	}
-
-	.time {
-		font-size: 13px;
-		font-weight: 600;
+		align-items: center;
+		gap: 6px;
+		padding: 14px 8px;
+		background: rgba(255, 255, 255, 0.06);
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		border-radius: 12px;
 		color: white;
-		font-variant-numeric: tabular-nums;
-		letter-spacing: 0.3px;
+		cursor: pointer;
+		transition: background 0.15s, transform 0.1s;
+		font-family: inherit;
+	}
+	.launcher-app:hover {
+		background: rgba(255, 255, 255, 0.14);
+		transform: scale(1.04);
 	}
 
-	.colon {
+	.la-icon  { font-size: 28px; }
+	.la-label { font-size: 11px; color: rgba(255,255,255,0.8); }
+
+	/* ===== Dock ===== */
+	.dock-wrap {
+		position: fixed;
+		bottom: 8px;
+		left: 0;
+		right: 0;
+		display: flex;
+		justify-content: center;
+		align-items: flex-end;
+		z-index: 9999;
+		pointer-events: none;
+	}
+
+	.dock {
+		display: flex;
+		align-items: flex-end;
+		gap: 4px;
+		padding: 8px 14px;
+		background: rgba(255, 255, 255, 0.14);
+		backdrop-filter: blur(40px);
+		-webkit-backdrop-filter: blur(40px);
+		border: 1px solid rgba(255, 255, 255, 0.22);
+		border-radius: 18px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255,255,255,0.12) inset;
+		pointer-events: all;
+	}
+
+	.dock-sep {
+		width: 1px;
+		height: 36px;
+		background: rgba(255, 255, 255, 0.2);
+		margin: 0 4px;
+		align-self: center;
+	}
+
+	.dock-item {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		width: 48px;
+		height: 48px;
+		flex-shrink: 0;
+		background: none;
+		border: none;
+		cursor: pointer;
+		border-radius: 10px;
+		transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.1s;
+	}
+
+	.dock-item:hover {
+		transform: translateY(-8px) scale(1.18);
+		background: rgba(255, 255, 255, 0.12);
+	}
+
+	.dock-item.dock-active {
+		background: rgba(255, 255, 255, 0.1);
+	}
+
+	.dock-item.dock-minimized {
+		opacity: 0.55;
+	}
+
+	.dock-icon {
+		font-size: 28px;
+		filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+		display: block;
+	}
+
+	.launcher-btn .dock-icon { font-size: 22px; }
+
+	.launchpad-icon {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 4px;
+		width: 24px;
+		height: 24px;
+		padding: 1px;
+	}
+
+	.launchpad-icon span {
+		background: rgba(255, 255, 255, 0.85);
+		border-radius: 4px;
+		transition: background 0.15s;
+	}
+
+	.dock-item:hover .launchpad-icon span,
+	.dock-active .launchpad-icon span {
+		background: white;
+	}
+
+	.dock-label {
+		position: absolute;
+		bottom: calc(100% + 6px);
+		left: 50%;
+		transform: translateX(-50%);
+		font-size: 11px;
+		font-weight: 500;
+		color: white;
+		background: rgba(20, 20, 32, 0.88);
+		backdrop-filter: blur(8px);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 6px;
+		padding: 3px 8px;
+		white-space: nowrap;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.15s;
+		z-index: 1;
+	}
+
+	.dock-item:hover .dock-label {
 		opacity: 1;
-		transition: opacity 0.1s;
-	}
-	.colon.dim { opacity: 0.3; }
-
-	.secs {
-		font-size: 10px;
-		color: #aaa;
-		font-weight: 400;
 	}
 
-	.date-small {
-		font-size: 10px;
-		color: #aaa;
+	.dock-dot {
+		width: 4px;
+		height: 4px;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.8);
+		position: absolute;
+		bottom: 1px;
+		left: 50%;
+		transform: translateX(-50%);
 	}
+
+	.dock-dot.hidden { display: none; }
 </style>

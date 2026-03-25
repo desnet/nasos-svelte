@@ -178,64 +178,75 @@
 	.sidebar {
 		width: 180px;
 		flex-shrink: 0;
-		background: #1e1e2e;
-		color: white;
+		border-right: 1px solid #dde0ea;
+		background: #fff;
 		display: flex;
 		flex-direction: column;
-		padding: 12px 8px;
-		gap: 8px;
+		padding: 16px 10px;
+		gap: 6px;
 	}
 
 	.store-logo {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		padding: 4px 8px 12px;
-		font-size: 15px;
+		padding: 0 4px 12px;
+		font-size: 14px;
 		font-weight: 700;
-		border-bottom: 1px solid rgba(255,255,255,0.1);
+		color: #222;
+		border-bottom: 1px solid #dde0ea;
+		margin-bottom: 4px;
 	}
 	.store-logo span:first-child { font-size: 20px; }
 
 	.search {
 		padding: 6px 10px;
-		border-radius: 6px;
-		border: none;
-		background: rgba(255,255,255,0.1);
-		color: white;
+		border-radius: 20px;
+		border: 1px solid #dde0ea;
+		background: #f5f6fa;
+		color: #333;
 		font-size: 12px;
 		outline: none;
+		font-family: inherit;
+		margin-bottom: 4px;
 	}
-	.search::placeholder { color: rgba(255,255,255,0.4); }
-	.search:focus { background: rgba(255,255,255,0.18); }
+	.search:focus { border-color: #4a90d9; background: white; }
 
 	.nav { display: flex; flex-direction: column; gap: 2px; }
 
 	.nav-item {
-		padding: 7px 10px;
-		background: none;
-		border: none;
-		color: rgba(255,255,255,0.65);
-		border-radius: 6px;
+		padding: 6px 12px;
+		border-radius: 20px;
+		border: 1px solid transparent;
+		background: white;
+		color: #555;
+		font-size: 12px;
 		cursor: pointer;
 		text-align: left;
-		font-size: 13px;
 		font-family: inherit;
+		transition: border-color 0.12s, color 0.12s, background 0.12s;
 	}
-	.nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
-	.nav-item.active { background: rgba(74,144,217,0.35); color: white; font-weight: 600; }
+	.nav-item:hover { border-color: #4a90d9; color: #4a90d9; }
+	.nav-item.active {
+		background: #4a90d9;
+		border-color: #4a90d9;
+		color: white;
+		font-weight: 600;
+	}
 
 	.installed-count {
 		margin-top: auto;
 		font-size: 11px;
-		color: rgba(255,255,255,0.35);
+		color: #bbb;
 		padding: 0 4px;
 	}
 
 	/* Main */
 	.main {
 		flex: 1;
+		min-width: 0;
 		overflow-y: auto;
+		overflow-x: hidden;
 		padding: 16px;
 	}
 
@@ -253,8 +264,8 @@
 
 	.count {
 		font-size: 11px;
-		background: #e0e4ef;
-		color: #666;
+		background: #eef0f8;
+		color: #888;
 		padding: 1px 7px;
 		border-radius: 10px;
 		font-weight: 400;
@@ -272,21 +283,21 @@
 		width: 120px;
 		padding: 14px 10px;
 		background: white;
-		border: 1px solid #e0e4ef;
+		border: 1px solid #dde0ea;
 		border-radius: 10px;
 		cursor: pointer;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 6px;
-		transition: box-shadow 0.15s;
+		transition: box-shadow 0.15s, border-color 0.15s;
 		font-family: inherit;
 	}
-	.featured-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); border-color: #4a90d9; }
+	.featured-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: #4a90d9; }
 
 	.fc-icon { font-size: 32px; }
 	.fc-name { font-size: 12px; font-weight: 600; color: #333; }
-	.fc-cat { font-size: 10px; color: #999; }
+	.fc-cat { font-size: 10px; color: #aaa; }
 	.fc-badge {
 		position: absolute;
 		top: 6px; right: 8px;
@@ -307,28 +318,27 @@
 		gap: 12px;
 		padding: 10px 12px;
 		background: white;
-		border: 1px solid #e8eaf0;
+		border: 1px solid #dde0ea;
 		border-radius: 8px;
 		cursor: pointer;
 		text-align: left;
 		font-family: inherit;
-		width: 100%;
-		transition: box-shadow 0.1s;
+		transition: box-shadow 0.1s, border-color 0.12s;
 	}
-	.app-row:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: #4a90d9; }
+	.app-row:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); border-color: #4a90d9; }
 
 	.app-icon { font-size: 28px; flex-shrink: 0; }
 
 	.app-info { flex: 1; overflow: hidden; }
 	.app-name { font-size: 13px; font-weight: 600; color: #222; }
-	.app-ver { font-size: 10px; color: #aaa; font-weight: 400; margin-left: 4px; }
+	.app-ver { font-size: 10px; color: #bbb; font-weight: 400; margin-left: 4px; }
 	.app-desc {
-		font-size: 11px; color: #666;
+		font-size: 11px; color: #777;
 		overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 		margin: 2px 0;
 	}
 	.app-meta { display: flex; align-items: center; gap: 10px; }
-	.app-size { font-size: 10px; color: #aaa; }
+	.app-size { font-size: 10px; color: #bbb; }
 
 	.app-action { flex-shrink: 0; min-width: 100px; display: flex; justify-content: flex-end; }
 
@@ -343,21 +353,23 @@
 		font-size: 12px;
 		font-weight: 600;
 		white-space: nowrap;
+		font-family: inherit;
 	}
 	.btn-install:hover { background: #357abd; }
 	.btn-install.small { padding: 4px 10px; font-size: 11px; }
 
 	.btn-uninstall {
 		padding: 6px 14px;
-		background: #e05050;
-		color: white;
-		border: none;
+		background: #f0f0f0;
+		color: #c03030;
+		border: 1px solid #ddd;
 		border-radius: 6px;
 		cursor: pointer;
 		font-size: 12px;
 		font-weight: 600;
+		font-family: inherit;
 	}
-	.btn-uninstall:hover { background: #c03030; }
+	.btn-uninstall:hover { background: #ffe0e0; border-color: #c03030; }
 
 	.installed-badge {
 		font-size: 11px;
@@ -369,7 +381,7 @@
 	.progress-wrap {
 		width: 90px;
 		height: 6px;
-		background: #e0e4ef;
+		background: #eef0f8;
 		border-radius: 3px;
 		overflow: hidden;
 	}
@@ -379,12 +391,12 @@
 		border-radius: 3px;
 		transition: width 0.2s;
 	}
-	.progress-label { font-size: 11px; color: #666; text-align: center; margin-top: 3px; }
+	.progress-label { font-size: 11px; color: #888; text-align: center; margin-top: 3px; }
 
 	.mini-progress {
 		width: 70px;
 		height: 4px;
-		background: #e0e4ef;
+		background: #eef0f8;
 		border-radius: 2px;
 		overflow: hidden;
 	}
@@ -410,6 +422,7 @@
 		font-size: 13px;
 		padding: 0;
 		margin-bottom: 16px;
+		font-family: inherit;
 	}
 	.back-btn:hover { text-decoration: underline; }
 
@@ -418,10 +431,10 @@
 		align-items: flex-start;
 		gap: 16px;
 		background: white;
-		border: 1px solid #e8eaf0;
+		border: 1px solid #dde0ea;
 		border-radius: 12px;
 		padding: 20px;
-		margin-bottom: 16px;
+		margin-bottom: 12px;
 	}
 
 	.detail-icon { font-size: 52px; flex-shrink: 0; }
@@ -433,39 +446,38 @@
 	.author { font-size: 12px; color: #888; }
 	.cat-badge {
 		font-size: 10px;
-		background: #eef2ff;
+		background: #eef0f8;
 		color: #4a90d9;
 		padding: 2px 8px;
 		border-radius: 10px;
 	}
 
 	.rating { display: flex; align-items: center; gap: 6px; }
-	.stars { color: #f0a020; }
 	.rating-num { font-weight: 700; color: #333; }
-	.reviews { font-size: 11px; color: #aaa; }
+	.reviews { font-size: 11px; color: #bbb; }
 
 	.detail-action { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 
 	.detail-body {
 		background: white;
-		border: 1px solid #e8eaf0;
+		border: 1px solid #dde0ea;
 		border-radius: 12px;
 		padding: 20px;
 	}
 
-	.detail-desc { color: #444; line-height: 1.6; margin-bottom: 16px; }
+	.detail-desc { color: #555; line-height: 1.6; margin-bottom: 16px; font-size: 13px; }
 
 	.detail-specs { display: flex; flex-direction: column; gap: 6px; }
 	.spec {
 		display: flex;
 		justify-content: space-between;
 		padding: 6px 10px;
-		background: #f8f9fc;
+		background: #f5f6fa;
 		border-radius: 6px;
 		font-size: 12px;
 	}
 	.spec span:first-child { color: #888; }
 	.spec span:last-child { font-weight: 600; color: #333; }
 
-	.empty { color: #aaa; text-align: center; padding: 40px; }
+	.empty { color: #bbb; text-align: center; padding: 40px; }
 </style>
