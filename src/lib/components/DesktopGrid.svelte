@@ -1,8 +1,15 @@
 <script lang="ts">
+	import { setContext } from 'svelte'
 	import { desktopGrid, type GridItem } from '$lib/stores/desktopGrid.svelte'
-	import DesktopGridCell from '$lib/components/DesktopGridCell.svelte'
+	import type { Snippet } from 'svelte'
 
-	let { cellW = 22, cellH = 22 } = $props<{ cellW?: number; cellH?: number }>()
+	let { cellW = 22, cellH = 22, items, onItemsChange, children } = $props<{
+		cellW?: number
+		cellH?: number
+		items: GridItem[]
+		onItemsChange: (items: GridItem[]) => void
+		children: Snippet
+	}>()
 
 	let containerEl = $state<HTMLDivElement | undefined>(undefined)
 	let containerW = $state(0)
@@ -37,6 +44,12 @@
 		window.addEventListener('mouseup',   onMouseup)
 	}
 
+	function isDragging(id: number) {
+		return drag?.item.id === id
+	}
+
+	setContext('desktopGrid', { startDrag, isDragging, get cellW() { return cellW }, get cellH() { return cellH } })
+
 	function onMousemove(e: MouseEvent) {
 		if (!drag || !containerEl) return
 		const rect = containerEl.getBoundingClientRect()
@@ -44,14 +57,14 @@
 		const cellTop  = e.clientY - rect.top  - drag.mouseOffsetY
 		const ghostCol = Math.max(1, Math.min(Math.floor(cellLeft / cellW) + 1, cols - drag.item.colSpan + 1))
 		const ghostRow = Math.max(1, Math.min(Math.floor(cellTop  / cellH) + 1, rows - drag.item.rowSpan + 1))
-		const valid = !desktopGrid.isOccupied(ghostCol, ghostRow, drag.item.colSpan, drag.item.rowSpan, drag.item.id)
+		const valid = !desktopGrid.isOccupied(items, ghostCol, ghostRow, drag.item.colSpan, drag.item.rowSpan, drag.item.id)
 		drag = { ...drag, ghostCol, ghostRow, valid }
 	}
 
 	function onMouseup() {
 		if (!drag) return
 		if (drag.valid) {
-			desktopGrid.move(drag.item.id, drag.ghostCol, drag.ghostRow)
+			onItemsChange(desktopGrid.move(items, drag.item.id, drag.ghostCol, drag.ghostRow))
 		}
 		drag = null
 		window.removeEventListener('mousemove', onMousemove)
@@ -61,21 +74,14 @@
 
 <div
 	class="grid"
+	class:grid-dragging={drag !== null}
 	style="--cell-w: {cellW}px; --cell-h: {cellH}px;"
 	bind:this={containerEl}
 	bind:clientWidth={containerW}
 	bind:clientHeight={containerH}
 	role="presentation"
 >
-	{#each desktopGrid.items as item (item.id)}
-		<DesktopGridCell
-			{item}
-			{cellW}
-			{cellH}
-			isDragging={drag?.item.id === item.id}
-			onDragStart={startDrag}
-		/>
-	{/each}
+	{@render children()}
 
 	<!-- Ghost during drag -->
 	{#if drag}
@@ -88,7 +94,7 @@
 				top:    {(drag.ghostRow - 1) * cellH}px;
 				width:  {drag.item.colSpan * cellW}px;
 				height: {drag.item.rowSpan * cellH}px;
-				background: {drag.item.color};
+				background: {drag.item.color ?? 'transparent'};
 			"
 		></div>
 	{/if}
@@ -100,9 +106,12 @@
 		width: 100%;
 		height: 100%;
 		overflow: hidden;
+	}
+
+	.grid-dragging {
 		background-image:
-			linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
-			linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+			linear-gradient(to right, rgba(255,255,255,0.07) 1px, transparent 1px),
+			linear-gradient(to bottom, rgba(255,255,255,0.07) 1px, transparent 1px);
 		background-size: var(--cell-w) var(--cell-h);
 	}
 
