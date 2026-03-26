@@ -1,16 +1,16 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
 	import { widgets, type WidgetType } from '$lib/stores/widgets.svelte'
+	import { dragState } from '$lib/stores/dragState.svelte'
 
-	let { id, type, x, y, children } = $props<{
+	let { id, type, x, y, width = undefined, children } = $props<{
 		id: number
 		type: WidgetType
 		x: number
 		y: number
+		width?: number
 		children: Snippet
 	}>()
-
-	const meta = $derived(widgets.meta(type))
 
 	const DRAG_THRESHOLD = 4
 
@@ -23,7 +23,7 @@
 	let dragStartX = 0
 	let dragStartY = 0
 
-	function onHeaderMousedown(e: MouseEvent) {
+	function onWidgetMousedown(e: MouseEvent) {
 		if (e.button !== 0) return
 		dragging = true
 		hasMoved = false
@@ -33,6 +33,7 @@
 		dragOffsetY = e.clientY - y
 		dragStartX = e.clientX
 		dragStartY = e.clientY
+		dragState.start()
 		window.addEventListener('mousemove', onMousemove)
 		window.addEventListener('mouseup', onMouseup)
 	}
@@ -48,8 +49,14 @@
 	}
 
 	function onMouseup(e: MouseEvent) {
+		dragState.end()
 		if (hasMoved) {
-			widgets.move(id, e.clientX - dragOffsetX, e.clientY - dragOffsetY)
+			const overTrash = (e.target as Element)?.closest('.trash-drop-zone')
+			if (overTrash) {
+				widgets.remove(id)
+			} else {
+				widgets.move(id, e.clientX - dragOffsetX, e.clientY - dragOffsetY)
+			}
 		}
 		dragging = false
 		window.removeEventListener('mousemove', onMousemove)
@@ -57,12 +64,7 @@
 	}
 </script>
 
-<div class="widget" style="left: {dragging ? dragX : x}px; top: {dragging ? dragY : y}px" class:dragging>
-	<div class="widget-header" onmousedown={onHeaderMousedown} role="presentation">
-		<span class="widget-icon">{meta.icon}</span>
-		<span class="widget-title">{meta.title}</span>
-		<button class="widget-close" onclick={() => widgets.remove(id)} title="Закрыть">✕</button>
-	</div>
+<div class="widget" style="left: {dragging ? dragX : x}px; top: {dragging ? dragY : y}px; {width ? `width: ${width}px` : ''}" class:dragging onmousedown={onWidgetMousedown} role="presentation">
 	<div class="widget-body">
 		{@render children()}
 	</div>
@@ -81,6 +83,7 @@
 		z-index: 50;
 		overflow: hidden;
 		user-select: none;
+		cursor: grab;
 	}
 
 	.widget.dragging {
@@ -89,43 +92,10 @@
 		cursor: grabbing;
 	}
 
-	.widget-header {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		padding: 6px 10px;
-		background: rgba(255, 255, 255, 0.06);
-		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-		cursor: grab;
-	}
-
-	.widget.dragging .widget-header {
-		cursor: grabbing;
-	}
-
-	.widget-icon { font-size: 13px; }
-
-	.widget-title {
-		flex: 1;
-		font-size: 11px;
-		font-weight: 600;
-		color: rgba(255, 255, 255, 0.7);
-		letter-spacing: 0.3px;
-		text-transform: uppercase;
-	}
-
-	.widget-close {
-		background: none;
-		border: none;
-		color: rgba(255, 255, 255, 0.4);
-		cursor: pointer;
-		font-size: 11px;
-		padding: 0 2px;
-		line-height: 1;
-	}
-	.widget-close:hover { color: white; }
-
 	.widget-body {
 		padding: 12px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 </style>

@@ -41,12 +41,11 @@ function createDesktop() {
 	let desktopIcons = $state<DesktopIcon[]>([
 		{ id: 1, label: 'Проводник', icon: '📁', type: 'app', app: 'explorer'  },
 		{ id: 2, label: 'Блокнот',   icon: '📝', type: 'app', app: 'notepad'   },
-		{ id: 3, label: 'Корзина',   icon: '🗑️', type: 'app', app: 'trash'     },
-		{ id: 4, label: 'Обо мне',   icon: '💻', type: 'app', app: 'about'     },
-		{ id: 5, label: 'Магазин',   icon: '🏪', type: 'app', app: 'appstore'  },
-		{ id: 6, label: 'Обои',      icon: '🖼️', type: 'app', app: 'wallpapers'}
+		{ id: 3, label: 'Обо мне',   icon: '💻', type: 'app', app: 'about'     },
+		{ id: 4, label: 'Магазин',   icon: '🏪', type: 'app', app: 'appstore'  },
+		{ id: 5, label: 'Обои',      icon: '🖼️', type: 'app', app: 'wallpapers'}
 	])
-	let nextIconId = $state(7)
+	let nextIconId = $state(6)
 
 	function openApp(app: string) {
 		const existing = windows.find((w) => w.component === app && !w.minimized)

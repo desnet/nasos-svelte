@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { desktop } from '$lib/stores/desktop.svelte'
+	import { dragState } from '$lib/stores/dragState.svelte'
 
 	let now = $state(new Date())
 	let showLauncher = $state(false)
@@ -27,6 +28,13 @@
 		if (w.minimized) desktop.restoreWindow(w.id)
 		else if (w.focused) desktop.minimizeWindow(w.id)
 		else desktop.focusWindow(w.id)
+	}
+
+	const trashWindow = $derived(desktop.windows.find((w) => w.component === 'trash') ?? null)
+
+	function trashClick() {
+		if (trashWindow) dockClick(trashWindow)
+		else desktop.openApp('trash')
 	}
 </script>
 
@@ -81,25 +89,23 @@
 			class="dock-item launcher-btn"
 			class:dock-active={showLauncher}
 			onclick={(e) => { e.stopPropagation(); showLauncher = !showLauncher }}
-			title="Приложения"
 		>
 			<span class="dock-icon launchpad-icon">
 				<span></span><span></span>
 				<span></span><span></span>
 			</span>
+			<span class="dock-label">Приложения</span>
 			{#if showLauncher}<div class="dock-dot"></div>{/if}
 		</button>
 
-		{#if desktop.windows.length > 0}
-			<div class="dock-sep"></div>
+		{#if desktop.windows.filter((w) => w.component !== 'trash').length > 0}
 
-			{#each desktop.windows as w (w.id)}
+			{#each desktop.windows.filter((w) => w.component !== 'trash') as w (w.id)}
 				<button
 					class="dock-item"
 					class:dock-active={w.focused && !w.minimized}
 					class:dock-minimized={w.minimized}
 					onclick={() => dockClick(w)}
-					title={w.title}
 				>
 					<span class="dock-icon">{w.icon}</span>
 					<span class="dock-label">{w.title}</span>
@@ -107,6 +113,20 @@
 				</button>
 			{/each}
 		{/if}
+
+		<!-- Pinned: Trash -->
+		<div class="dock-sep"></div>
+		<button
+			class="dock-item trash-drop-zone"
+			class:dock-active={trashWindow?.focused && !trashWindow?.minimized}
+			class:dock-minimized={trashWindow?.minimized}
+			class:trash-ready={dragState.active}
+			onclick={trashClick}
+		>
+			<span class="dock-icon">🗑️</span>
+			<span class="dock-label">Корзина</span>
+			{#if trashWindow}<div class="dock-dot" class:hidden={trashWindow.minimized}></div>{/if}
+		</button>
 	</div>
 </div>
 
@@ -351,4 +371,10 @@
 	}
 
 	.dock-dot.hidden { display: none; }
+
+	.trash-ready {
+		background: rgba(210, 55, 70, 0.25) !important;
+		transform: translateY(-10px) scale(1.22);
+	}
+	.trash-ready .dock-label { opacity: 1; }
 </style>
