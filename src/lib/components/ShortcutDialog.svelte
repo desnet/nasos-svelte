@@ -21,11 +21,7 @@
 			app: type === 'app' ? app : 'iframe',
 			url: type === 'url' ? url : undefined
 		}
-		if (icon) {
-			desktop.updateIcon(icon.id, data)
-		} else {
-			desktop.addIcon(data)
-		}
+		shortcutDialogState.onSave?.(data)
 		desktop.closeWindow(winId)
 	}
 </script>

@@ -4,10 +4,11 @@
 
 	const winId = getContext<number>('windowId')
 	const win = $derived(desktop.windows.find((w) => w.id === winId))
+	const url = $derived(win?.args?.url as string | undefined)
 </script>
 
-{#if win?.url}
-	<iframe src={win.url} title={win.title} sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+{#if url}
+	<iframe src={url} title={win?.title} sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
 {:else}
 	<div class="empty">Нет URL</div>
 {/if}

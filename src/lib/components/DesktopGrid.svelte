@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { setContext } from 'svelte'
 	import { desktopGrid, type GridItem } from '$lib/stores/desktopGrid.svelte'
+	import { dragState } from '$lib/stores/dragState.svelte'
 	import type { Snippet } from 'svelte'
 
-	let { cellW = 22, cellH = 22, items, onItemsChange, children } = $props<{
+	let { cellW = 22, cellH = 22, items, onItemsChange, onItemRemove, children } = $props<{
 		cellW?: number
 		cellH?: number
 		items: GridItem[]
 		onItemsChange: (items: GridItem[]) => void
+		onItemRemove?: (id: number) => void
 		children: Snippet
 	}>()
 
@@ -40,6 +42,7 @@
 			ghostRow: item.row,
 			valid: true
 		}
+		dragState.start()
 		window.addEventListener('mousemove', onMousemove)
 		window.addEventListener('mouseup',   onMouseup)
 	}
@@ -49,6 +52,10 @@
 	}
 
 	setContext('desktopGrid', { startDrag, isDragging, get cellW() { return cellW }, get cellH() { return cellH } })
+
+	$effect(() => {
+		document.body.style.cursor = drag ? 'move' : ''
+	})
 
 	function onMousemove(e: MouseEvent) {
 		if (!drag || !containerEl) return
@@ -61,12 +68,16 @@
 		drag = { ...drag, ghostCol, ghostRow, valid }
 	}
 
-	function onMouseup() {
+	function onMouseup(e: MouseEvent) {
 		if (!drag) return
-		if (drag.valid) {
+		const overTrash = (e.target as Element)?.closest('.trash-drop-zone')
+		if (overTrash) {
+			onItemRemove?.(drag.item.id)
+		} else if (drag.valid) {
 			onItemsChange(desktopGrid.move(items, drag.item.id, drag.ghostCol, drag.ghostRow))
 		}
 		drag = null
+		dragState.end()
 		window.removeEventListener('mousemove', onMousemove)
 		window.removeEventListener('mouseup',   onMouseup)
 	}

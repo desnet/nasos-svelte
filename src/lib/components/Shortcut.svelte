@@ -1,5 +1,5 @@
 <script lang="ts">
-	export type IconConfig = {
+	export type ShortcutConfig = {
 		icon: string
 		label: string
 		app: string
@@ -7,8 +7,8 @@
 	}
 
 	let { config, ondblclick } = $props<{
-		config: IconConfig
-		ondblclick?: (config: IconConfig) => void
+		config: ShortcutConfig
+		ondblclick?: (config: ShortcutConfig) => void
 	}>()
 </script>
 
@@ -26,7 +26,7 @@
 		padding: 6px;
 		background: none;
 		border: none;
-		cursor: pointer;
+		cursor: default;
 		border-radius: 8px;
 		width: 100%;
 		height: 100%;

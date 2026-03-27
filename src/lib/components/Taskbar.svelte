@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { desktop } from '$lib/stores/desktop.svelte'
+	import { dragState } from '$lib/stores/dragState.svelte'
 
 	let showLauncher = $state(false)
 
@@ -56,6 +57,23 @@
 <!-- Dock -->
 <div class="dock-wrap">
 	<div class="dock">
+
+		{#if desktop.windows.some(w => w.component !== 'trash')}
+			{#each desktop.windows.filter(w => w.component !== 'trash') as w (w.id)}
+				<button
+					class="dock-item"
+					class:dock-active={w.focused && !w.minimized}
+					class:dock-minimized={w.minimized}
+					onclick={() => dockClick(w)}
+				>
+					<span class="dock-icon">{w.icon}</span>
+					<span class="dock-label">{w.title}</span>
+					<div class="dock-dot" class:hidden={w.minimized}></div>
+				</button>
+			{/each}
+			<div class="dock-sep"></div>
+		{/if}
+
 		<button
 			class="dock-item launcher-btn"
 			class:dock-active={showLauncher}
@@ -69,21 +87,18 @@
 			{#if showLauncher}<div class="dock-dot"></div>{/if}
 		</button>
 
-		{#if desktop.windows.length > 0}
-			<div class="dock-sep"></div>
-			{#each desktop.windows as w (w.id)}
-				<button
-					class="dock-item"
-					class:dock-active={w.focused && !w.minimized}
-					class:dock-minimized={w.minimized}
-					onclick={() => dockClick(w)}
-				>
-					<span class="dock-icon">{w.icon}</span>
-					<span class="dock-label">{w.title}</span>
-					<div class="dock-dot" class:hidden={w.minimized}></div>
-				</button>
-			{/each}
-		{/if}
+		<button class="dock-item launcher-btn">
+			<span class="dock-icon widget-icon">
+				<span class="wi-wide"></span>
+				<span></span><span></span>
+			</span>
+			<span class="dock-label">Виджеты</span>
+		</button>
+		
+		<button class="trash-drop-zone dock-item" class:trash-ready={dragState.active} class:dock-active={desktop.windows.some(w => w.component === 'trash' && w.focused && !w.minimized)} onclick={() => { const w = desktop.windows.find(w => w.component === 'trash'); if (w) dockClick(w); else desktop.openApp('trash') }}>
+			<span class="dock-icon">🗑️</span>
+			<span class="dock-label">Корзина</span>
+		</button>
 	</div>
 </div>
 
@@ -216,6 +231,29 @@
 	.dock-item:hover .launchpad-icon span,
 	.dock-active .launchpad-icon span { background: white; }
 
+	.widget-icon {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		grid-template-rows: 1fr 1fr;
+		gap: 4px;
+		width: 24px;
+		height: 24px;
+		padding: 1px;
+	}
+
+	.widget-icon span {
+		background: rgba(255, 255, 255, 0.85);
+		border-radius: 3px;
+		transition: background 0.15s;
+	}
+
+	.widget-icon .wi-wide {
+		grid-column: 1 / 3;
+		border-radius: 4px;
+	}
+
+	.dock-item:hover .widget-icon span { background: white; }
+
 	.dock-label {
 		position: absolute;
 		bottom: calc(100% + 6px);
@@ -248,4 +286,12 @@
 		transform: translateX(-50%);
 	}
 	.dock-dot.hidden { display: none; }
+
+	.trash-drop-zone {
+		transition: background 0.15s, transform 0.15s;
+	}
+	.trash-ready:hover {
+		background: rgba(220, 60, 60, 0.35) !important;
+		transform: translateY(-8px) scale(1.18);
+	}
 </style>

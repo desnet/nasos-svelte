@@ -10,7 +10,7 @@ export type WindowApp = {
 	maximized: boolean
 	focused: boolean
 	component: string
-	url?: string
+	args?: Record<string, unknown>
 }
 
 export type DesktopIconType = 'app' | 'url'
@@ -38,16 +38,16 @@ function createDesktop() {
 	let nextId = $state(1)
 	let zOrder = $state<number[]>([])
 
-	let desktopIcons = $state<DesktopIcon[]>([
-		{ id: 1, label: 'Проводник', icon: '📁', type: 'app', app: 'explorer'  },
-		{ id: 2, label: 'Блокнот',   icon: '📝', type: 'app', app: 'notepad'   },
-		{ id: 3, label: 'Обо мне',   icon: '💻', type: 'app', app: 'about'     },
-		{ id: 4, label: 'Магазин',   icon: '🏪', type: 'app', app: 'appstore'  },
-		{ id: 5, label: 'Обои',      icon: '🖼️', type: 'app', app: 'wallpapers'}
-	])
-	let nextIconId = $state(6)
+	// let desktopIcons = $state<DesktopIcon[]>([
+	// 	{ id: 1, label: 'Проводник', icon: '📁', type: 'app', app: 'explorer'  },
+	// 	{ id: 2, label: 'Блокнот',   icon: '📝', type: 'app', app: 'notepad'   },
+	// 	{ id: 3, label: 'Обо мне',   icon: '💻', type: 'app', app: 'about'     },
+	// 	{ id: 4, label: 'Магазин',   icon: '🏪', type: 'app', app: 'appstore'  },
+	// 	{ id: 5, label: 'Обои',      icon: '🖼️', type: 'app', app: 'wallpapers'}
+	// ])
+	// let nextIconId = $state(6)
 
-	function openApp(app: string) {
+	function openApp(app: string, args?: Record<string, unknown>) {
 		const existing = windows.find((w) => w.component === app && !w.minimized)
 		if (existing) { focusWindow(existing.id); return }
 		const minimized = windows.find((w) => w.component === app && w.minimized)
@@ -64,38 +64,8 @@ function createDesktop() {
 			width:  app === 'explorer' ? 680 : app === 'appstore' ? 780 : app === 'wallpapers' ? 720 : 500,
 			height: app === 'explorer' ? 460 : app === 'appstore' ? 520 : app === 'wallpapers' ? 480 : 380,
 			minimized: false, maximized: false, focused: true,
-			component: app
-		})
-		zOrder.push(id)
-		focusWindow(id)
-	}
-
-	function openShortcutDialog(title: string) {
-		if (windows.find((w) => w.component === 'shortcut-dialog')) return
-		const id = nextId++
-		const vw = typeof window !== 'undefined' ? window.innerWidth : 1280
-		const vh = typeof window !== 'undefined' ? window.innerHeight : 800
-		windows.push({
-			id, title, icon: '🔗',
-			x: Math.round(vw / 2 - 190),
-			y: Math.round(vh / 2 - 170),
-			width: 380, height: 310,
-			minimized: false, maximized: false, focused: true,
-			component: 'shortcut-dialog'
-		})
-		zOrder.push(id)
-		focusWindow(id)
-	}
-
-	function openUrl(url: string, title: string, icon: string) {
-		const id = nextId++
-		const offset = (windows.filter((w) => !w.minimized).length % 6) * 24
-		windows.push({
-			id, title, icon, url,
-			x: 80 + offset, y: 60 + offset,
-			width: 960, height: 620,
-			minimized: false, maximized: false, focused: true,
-			component: 'iframe'
+			component: app,
+			args
 		})
 		zOrder.push(id)
 		focusWindow(id)
@@ -139,24 +109,22 @@ function createDesktop() {
 		return 100 + zOrder.indexOf(id)
 	}
 
-	function addIcon(data: Omit<DesktopIcon, 'id'>) {
-		desktopIcons.push({ id: nextIconId++, ...data })
-	}
+	// function addIcon(data: Omit<DesktopIcon, 'id'>) {
+	// 	desktopIcons.push({ id: nextIconId++, ...data })
+	// }
 
-	function updateIcon(id: number, patch: Partial<Omit<DesktopIcon, 'id'>>) {
-		desktopIcons = desktopIcons.map((ic) => (ic.id === id ? { ...ic, ...patch } : ic))
-	}
+	// function updateIcon(id: number, patch: Partial<Omit<DesktopIcon, 'id'>>) {
+	// 	desktopIcons = desktopIcons.map((ic) => (ic.id === id ? { ...ic, ...patch } : ic))
+	// }
 
-	function removeIcon(id: number) {
-		desktopIcons = desktopIcons.filter((ic) => ic.id !== id)
-	}
+	// function removeIcon(id: number) {
+	// 	desktopIcons = desktopIcons.filter((ic) => ic.id !== id)
+	// }
 
 	return {
 		get windows() { return windows },
-		get desktopIcons() { return desktopIcons },
+		// get desktopIcons() { return desktopIcons },
 		openApp,
-		openShortcutDialog,
-		openUrl,
 		focusWindow,
 		closeWindow,
 		minimizeWindow,
@@ -165,9 +133,9 @@ function createDesktop() {
 		moveWindow,
 		resizeWindow,
 		getZIndex,
-		addIcon,
-		updateIcon,
-		removeIcon
+		// addIcon,
+		// updateIcon,
+		// removeIcon
 	}
 }
 

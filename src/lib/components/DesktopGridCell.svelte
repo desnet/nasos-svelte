@@ -58,8 +58,6 @@
 >
 	{#if children}
 		{@render children()}
-	{:else}
-		<span class="cell-label">{item.label}</span>
 	{/if}
 </div>
 
@@ -67,7 +65,7 @@
 	.cell {
 		position: absolute;
 		border-radius: 8px;
-		cursor: grab;
+		cursor: default;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -82,14 +80,6 @@
 
 	.cell.dragging {
 		opacity: 0.4;
-		cursor: grabbing;
 	}
 
-	.cell-label {
-		font-size: 12px;
-		font-weight: 600;
-		color: rgba(255, 255, 255, 0.9);
-		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-		pointer-events: none;
-	}
 </style>

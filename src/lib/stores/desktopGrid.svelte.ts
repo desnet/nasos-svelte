@@ -5,7 +5,6 @@ export type GridItem = {
 	colSpan: number  // width in cells
 	rowSpan: number  // height in cells
 	color?: string
-	label: string
 }
 
 function createDesktopGrid() {

@@ -3,40 +3,13 @@
 	import { desktop } from '$lib/stores/desktop.svelte'
 	import { wallpaperStore } from '$lib/stores/wallpaper.svelte'
 	import type { GridItem } from '$lib/stores/desktopGrid.svelte'
-	import type { IconConfig } from '$lib/components/Shortcut.svelte'
+	import type { ShortcutConfig } from '$lib/components/Shortcut.svelte'
+	import type { WidgetConfig } from '$lib/components/Widget.svelte'
 
 	// Grid components
 	import DesktopGridCell from '$lib/components/DesktopGridCell.svelte'
 	import Shortcut from '$lib/components/Shortcut.svelte'
-
-	type ShortcutItem = GridItem & { config: IconConfig }
-
-	const COL = 2
-	const SPAN_W = 4
-	const SPAN_H = 3
-	const ROW_GAP = 1
-
-	function shortcutRow(index: number) {
-		return 2 + index * (SPAN_H + ROW_GAP)
-	}
-
-	let gridItems = $state<ShortcutItem[]>([
-		{ id: 1, col: COL, row: shortcutRow(0), colSpan: SPAN_W, rowSpan: SPAN_H, label: 'Проводник', config: { icon: '📁', label: 'Проводник', app: 'explorer'   } },
-		{ id: 2, col: COL, row: shortcutRow(1), colSpan: SPAN_W, rowSpan: SPAN_H, label: 'Блокнот',   config: { icon: '📝', label: 'Блокнот',   app: 'notepad'    } },
-		{ id: 3, col: COL, row: shortcutRow(2), colSpan: SPAN_W, rowSpan: SPAN_H, label: 'Обо мне',   config: { icon: '💻', label: 'Обо мне',   app: 'about'      } },
-		{ id: 4, col: COL, row: shortcutRow(3), colSpan: SPAN_W, rowSpan: SPAN_H, label: 'Корзина',   config: { icon: '🗑️', label: 'Корзина',   app: 'trash'      } },
-		{ id: 5, col: COL, row: shortcutRow(4), colSpan: SPAN_W, rowSpan: SPAN_H, label: 'Магазин',   config: { icon: '🏪', label: 'Магазин',   app: 'appstore'   } },
-		{ id: 6, col: COL, row: shortcutRow(5), colSpan: SPAN_W, rowSpan: SPAN_H, label: 'Обои',      config: { icon: '🖼️', label: 'Обои',      app: 'wallpapers' } },
-	])
-
-	// Layout components
-	import MenuBar from '$lib/components/MenuBar.svelte'
-	import DesktopGrid from '$lib/components/DesktopGrid.svelte'
-	import Taskbar from '$lib/components/Taskbar.svelte'
-
-	// Window infrastructure
-	import Window from '$lib/components/Window.svelte'
-	import type { Component } from 'svelte'
+	import Widget from '$lib/components/Widget.svelte'
 
 	// Apps
 	import Explorer from '$lib/apps/Explorer.svelte'
@@ -58,16 +31,64 @@
 		iframe:            IframeApp,
 		'shortcut-dialog': ShortcutDialog
 	}
+
+	// Widgets
+	import ClockWidget from '$lib/widgets/ClockWidget.svelte'
+	import CalendarWidget from '$lib/widgets/CalendarWidget.svelte'
+
+	const WIDGET_COMPONENTS: Record<string, Component> = {
+		clock:    ClockWidget,
+		calendar: CalendarWidget,
+	}
+
+	// Layout components
+	import MenuBar from '$lib/components/MenuBar.svelte'
+	import DesktopGrid from '$lib/components/DesktopGrid.svelte'
+	import Taskbar from '$lib/components/Taskbar.svelte'
+
+	// Window infrastructure
+	import Window from '$lib/components/Window.svelte'
+	import type { Component } from 'svelte'
+
+	type DesktopItem = GridItem & { shortcut?: ShortcutConfig; widget?: WidgetConfig }
+
+	const COL = 2
+	const SPAN_W = 4
+	const SPAN_H = 3
+	const ROW_GAP = 1
+
+	function shortcutRow(index: number) {
+		return 2 + index * (SPAN_H + ROW_GAP)
+	}
+
+	let gridItems = $state<DesktopItem[]>([
+		{ id: 1, col: COL, row: shortcutRow(0), colSpan: SPAN_W, rowSpan: SPAN_H, shortcut: { icon: '📁', label: 'Проводник', app: 'explorer'   } },
+		{ id: 2, col: COL, row: shortcutRow(1), colSpan: SPAN_W, rowSpan: SPAN_H, shortcut: { icon: '📝', label: 'Блокнот',   app: 'notepad'    } },
+		{ id: 3, col: COL, row: shortcutRow(2), colSpan: SPAN_W, rowSpan: SPAN_H, shortcut: { icon: '💻', label: 'Обо мне',   app: 'about'      } },
+		{ id: 4, col: COL, row: shortcutRow(3), colSpan: SPAN_W, rowSpan: SPAN_H, shortcut: { icon: '🗑️', label: 'Корзина',   app: 'trash'      } },
+		{ id: 5, col: COL, row: shortcutRow(4), colSpan: SPAN_W, rowSpan: SPAN_H, shortcut: { icon: '🏪', label: 'Магазин',   app: 'appstore'   } },
+		{ id: 6, col: COL, row: shortcutRow(5), colSpan: SPAN_W, rowSpan: SPAN_H, shortcut: { icon: '🖼️', label: 'Обои',      app: 'wallpapers' } },
+		{ id: 7, col: 8,   row: 2,              colSpan: 10,      rowSpan: 11,      widget: { name: 'clock',    app: 'clock'    } },
+		{ id: 8, col: 8,   row: 14,             colSpan: 10,      rowSpan: 12,      widget: { name: 'calendar', app: 'calendar' } },
+	])
+
 </script>
 
 <div class="desktop" style="background: {wallpaperStore.current.css}">
 	<MenuBar />
 
 	<div class="desktop-area">
-		<DesktopGrid cellW={22} cellH={22} items={gridItems} onItemsChange={(v) => (gridItems = v as ShortcutItem[])}>
+		<DesktopGrid cellW={22} cellH={22} items={gridItems} onItemsChange={(v) => (gridItems = v as DesktopItem[])} onItemRemove={(id) => (gridItems = gridItems.filter(item => item.id !== id))}>
 			{#each gridItems as item (item.id)}
 				<DesktopGridCell {item}>
-					<Shortcut config={item.config} ondblclick={(cfg) => desktop.openApp(cfg.app)} />
+					{#if item.shortcut}
+						<Shortcut config={item.shortcut} ondblclick={(cfg) => desktop.openApp(cfg.app, cfg.args)} />
+					{:else if item.widget}
+						{@const WidgetSomp = WIDGET_COMPONENTS[item.widget.name]}
+						<Widget config={item.widget} ondblclick={(cfg) => cfg.app && desktop.openApp(cfg.app, cfg.args)}>
+							{#if WidgetSomp}<WidgetSomp />{/if}
+						</Widget>
+					{/if}
 				</DesktopGridCell>
 			{/each}
 		</DesktopGrid>
@@ -76,7 +97,7 @@
 		{#each desktop.windows as win (win.id)}
 			{@const AppComp = APP_COMPONENTS[win.component]}
 			<Window id={win.id}>
-				<AppComp />
+				{#if AppComp}<AppComp />{/if}
 			</Window>
 		{/each}
 	</div>
