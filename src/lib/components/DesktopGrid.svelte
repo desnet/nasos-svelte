@@ -4,12 +4,16 @@
 	import { dragState } from '$lib/stores/dragState.svelte'
 	import type { Snippet } from 'svelte'
 
-	let { cellW = 22, cellH = 22, items, onItemsChange, onItemRemove, children } = $props<{
+	let { cellW = 22, cellH = 22, items, onItemsChange, onItemRemove, onItemDragOut, onGhostOut, onGhostIn, allowDragOut = false, children } = $props<{
 		cellW?: number
 		cellH?: number
 		items: GridItem[]
 		onItemsChange: (items: GridItem[]) => void
 		onItemRemove?: (id: number) => void
+		onItemDragOut?: (id: number, clientX: number, clientY: number) => void
+		onGhostOut?: (item: GridItem) => void
+		onGhostIn?: (item: GridItem) => void
+		allowDragOut?: boolean
 		children: Snippet
 	}>()
 
@@ -27,9 +31,47 @@
 		ghostCol: number
 		ghostRow: number
 		valid: boolean
+		outsideGrid: boolean
 	}
 
 	let drag = $state<DragState | null>(null)
+
+	// ── Body ghost (монтируется в document.body, не зависит от overflow/transform родителей) ──
+	let bodyGhostEl: HTMLDivElement | null = null
+
+	function createBodyGhost(item: GridItem) {
+		if (bodyGhostEl) return
+		bodyGhostEl = document.createElement('div')
+		Object.assign(bodyGhostEl.style, {
+			position:      'fixed',
+			borderRadius:  '8px',
+			pointerEvents: 'none',
+			opacity:       '0.6',
+			outline:       '2px dashed rgba(255,255,255,0.6)',
+			outlineOffset: '-2px',
+			zIndex:        '99999',
+			width:         item.colSpan * cellW + 'px',
+			height:        item.rowSpan * cellH + 'px',
+			background:    item.color ?? 'transparent',
+		})
+		document.body.appendChild(bodyGhostEl)
+	}
+
+	function moveBodyGhost(clientX: number, clientY: number) {
+		if (!bodyGhostEl || !drag) return
+		bodyGhostEl.style.left = (clientX - drag.mouseOffsetX) + 'px'
+		bodyGhostEl.style.top  = (clientY - drag.mouseOffsetY) + 'px'
+	}
+
+	function removeBodyGhost() {
+		bodyGhostEl?.remove()
+		bodyGhostEl = null
+	}
+
+	// Cleanup при уничтожении компонента
+	$effect(() => () => removeBodyGhost())
+
+	// ────────────────────────────────────────────────────────────────────────────
 
 	function startDrag(item: GridItem, clientX: number, clientY: number) {
 		if (!containerEl) return
@@ -40,7 +82,8 @@
 			mouseOffsetY: clientY - rect.top  - (item.row - 1) * cellH,
 			ghostCol: item.col,
 			ghostRow: item.row,
-			valid: true
+			valid: true,
+			outsideGrid: false,
 		}
 		dragState.start()
 		window.addEventListener('mousemove', onMousemove)
@@ -78,12 +121,36 @@
 	function onMousemove(e: MouseEvent) {
 		if (!drag || !containerEl) return
 		const rect = containerEl.getBoundingClientRect()
+
+		const isOutside = allowDragOut && (
+			e.clientX < rect.left || e.clientX > rect.right ||
+			e.clientY < rect.top  || e.clientY > rect.bottom
+		)
+
+		if (isOutside) {
+			// Создаём body-гост при первом выходе за границу
+			if (!drag.outsideGrid) {
+				createBodyGhost(drag.item)
+				drag = { ...drag, outsideGrid: true, valid: false }
+				onGhostOut?.(drag.item)
+			}
+			// Позицию обновляем напрямую — без Svelte-реактивности
+			moveBodyGhost(e.clientX, e.clientY)
+			return
+		}
+
+		// Вернулись внутрь — убираем body-гост
+		if (drag.outsideGrid) {
+			removeBodyGhost()
+			onGhostIn?.(drag.item)
+		}
+
 		const cellLeft = e.clientX - rect.left - drag.mouseOffsetX
 		const cellTop  = e.clientY - rect.top  - drag.mouseOffsetY
 		const ghostCol = Math.max(1, Math.min(Math.floor(cellLeft / cellW) + 1, cols - drag.item.colSpan + 1))
 		const ghostRow = Math.max(1, Math.min(Math.floor(cellTop  / cellH) + 1, rows - drag.item.rowSpan + 1))
 		const valid = !desktopGrid.isOccupied(items, ghostCol, ghostRow, drag.item.colSpan, drag.item.rowSpan, drag.item.id)
-		drag = { ...drag, ghostCol, ghostRow, valid }
+		drag = { ...drag, ghostCol, ghostRow, valid, outsideGrid: false }
 	}
 
 	function onMouseup(e: MouseEvent) {
@@ -91,9 +158,12 @@
 		const overTrash = (e.target as Element)?.closest('.trash-drop-zone')
 		if (overTrash) {
 			onItemRemove?.(drag.item.id)
+		} else if (drag.outsideGrid) {
+			onItemDragOut?.(drag.item.id, e.clientX, e.clientY)
 		} else if (drag.valid) {
 			onItemsChange(desktopGrid.move(items, drag.item.id, drag.ghostCol, drag.ghostRow))
 		}
+		removeBodyGhost()
 		drag = null
 		dragState.end()
 		window.removeEventListener('mousemove', onMousemove)
@@ -112,8 +182,8 @@
 >
 	{@render children()}
 
-	<!-- Ghost during drag -->
-	{#if drag}
+	<!-- Гост внутри грида (только пока не вышел за границы) -->
+	{#if drag && !drag.outsideGrid}
 		<div
 			class="ghost"
 			class:ghost-valid={drag.valid}
