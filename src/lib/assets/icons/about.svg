@@ -1,0 +1,27 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#434343"/>
+      <stop offset="100%" stop-color="#1a1a2e"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0D2137"/>
+      <stop offset="100%" stop-color="#0A1628"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- laptop base -->
+  <rect x="9" y="42" width="46" height="5" rx="2.5" fill="#555"/>
+  <!-- laptop body -->
+  <rect x="13" y="17" width="38" height="26" rx="3" fill="#333"/>
+  <!-- screen -->
+  <rect x="15" y="19" width="34" height="22" rx="2" fill="url(#screen)"/>
+  <!-- terminal prompt -->
+  <text x="18" y="30" font-family="monospace" font-size="7" fill="#00FF85" font-weight="bold">&gt;_</text>
+  <line x1="18" y1="34" x2="38" y2="34" stroke="#00FF85" stroke-width="1.2" stroke-linecap="round" stroke-opacity="0.5"/>
+  <line x1="18" y1="37" x2="31" y2="37" stroke="#00FF85" stroke-width="1.2" stroke-linecap="round" stroke-opacity="0.3"/>
+  <!-- hinge line -->
+  <line x1="13" y1="43" x2="51" y2="43" stroke="#222" stroke-width="1"/>
+  <!-- camera dot -->
+  <circle cx="32" cy="18" r="0.8" fill="#555"/>
+</svg>

@@ -1,70 +1,57 @@
 <script lang="ts">
-	import { desktop } from '$lib/stores/desktop.svelte'
-	import { dragState } from '$lib/stores/dragState.svelte'
+	import { desktop, type WindowOptions } from '$lib/stores/desktop.svelte'
+	import { taskbar, type Pinned } from '$lib/stores/taskbar.svelte'
 
-	let showLauncher = $state(false)
+	let activeItem = $state<string>('')
+	let pinnedList = taskbar.pinnedList();
+	let unpinnedList = $derived(desktop.windows.filter(w => !pinnedList.find(pinned => pinned.app == w.component)));
 
-	const launcherApps = [
-		{ label: 'Проводник', icon: '📁', app: 'explorer'   },
-		{ label: 'Блокнот',   icon: '📝', app: 'notepad'    },
-		{ label: 'Магазин',   icon: '🏪', app: 'appstore'   },
-		{ label: 'Обо мне',   icon: '💻', app: 'about'      },
-		{ label: 'Обои',      icon: '🖼️', app: 'wallpapers' }
-	]
-
-	function openApp(app: string) {
-		desktop.openApp(app)
-		showLauncher = false
-	}
-
-	function dockClick(w: (typeof desktop.windows)[number]) {
+	// ── Dock ─────────────────────────────────────────────────────────────────────
+	function toggleApp(w: (typeof desktop.windows)[number]) {
 		if (w.minimized) desktop.restoreWindow(w.id)
 		else if (w.focused) desktop.minimizeWindow(w.id)
 		else desktop.focusWindow(w.id)
 	}
+
+	function togglePunnedApp(pinned: Pinned) {
+		const appWinOptions: WindowOptions = {
+			width: '50vw',
+			height: '50vh'
+		}
+
+		if(/^launcher/.test(pinned.id)) {
+			Object.assign(appWinOptions, {
+				titlebar: false,
+				resizable: false,
+				overlay: true,
+				focusDim: true,
+				position: 'center',
+				variant: 'transparent'
+			});
+		}
+		
+		activeItem = pinned.id;
+		desktop.openApp(
+			pinned.app,
+			pinned.args, 
+			appWinOptions
+		) 
+	}
 </script>
 
-<svelte:window onclick={() => (showLauncher = false)} />
-
-<!-- Launcher overlay -->
-{#if showLauncher}
-	<div
-		class="launcher-overlay"
-		onclick={() => (showLauncher = false)}
-		onkeydown={(e) => e.key === 'Escape' && (showLauncher = false)}
-		role="presentation"
-	>
-		<div
-			class="launcher"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="menu"
-			tabindex="0"
-		>
-			<div class="launcher-title">Приложения</div>
-			<div class="launcher-grid">
-				{#each launcherApps as a (a.app)}
-					<button class="launcher-app" onclick={() => openApp(a.app)}>
-						<span class="la-icon">{a.icon}</span>
-						<span class="la-label">{a.label}</span>
-					</button>
-				{/each}
-			</div>
-		</div>
-	</div>
-{/if}
+<svelte:window onclick={() => activeItem=''} />
 
 <!-- Dock -->
 <div class="dock-wrap">
 	<div class="dock">
 
-		{#if desktop.windows.some(w => w.component !== 'trash')}
-			{#each desktop.windows.filter(w => w.component !== 'trash') as w (w.id)}
+		{#if unpinnedList.length}
+			{#each unpinnedList as w (w.id)}
 				<button
 					class="dock-item"
 					class:dock-active={w.focused && !w.minimized}
 					class:dock-minimized={w.minimized}
-					onclick={() => dockClick(w)}
+					onclick={(e) => {e.stopPropagation(); toggleApp(w)}}
 				>
 					<span class="dock-icon">{w.icon}</span>
 					<span class="dock-label">{w.title}</span>
@@ -74,90 +61,41 @@
 			<div class="dock-sep"></div>
 		{/if}
 
-		<button
-			class="dock-item launcher-btn"
-			class:dock-active={showLauncher}
-			onclick={(e) => { e.stopPropagation(); showLauncher = !showLauncher }}
-		>
-			<span class="dock-icon launchpad-icon">
-				<span></span><span></span>
-				<span></span><span></span>
-			</span>
-			<span class="dock-label">Приложения</span>
-			{#if showLauncher}<div class="dock-dot"></div>{/if}
-		</button>
-
-		<button class="dock-item launcher-btn">
-			<span class="dock-icon widget-icon">
-				<span class="wi-wide"></span>
-				<span></span><span></span>
-			</span>
-			<span class="dock-label">Виджеты</span>
-		</button>
-		
-		<button class="trash-drop-zone dock-item" class:trash-ready={dragState.active} class:dock-active={desktop.windows.some(w => w.component === 'trash' && w.focused && !w.minimized)} onclick={() => { const w = desktop.windows.find(w => w.component === 'trash'); if (w) dockClick(w); else desktop.openApp('trash') }}>
-			<span class="dock-icon">🗑️</span>
-			<span class="dock-label">Корзина</span>
-		</button>
+		{#each taskbar.pinnedList() as pinned (pinned.id)}
+			<button
+				class="dock-item"
+				class:dock-active={activeItem === pinned.id}
+				onclick={(e) => {e.stopPropagation(); togglePunnedApp(pinned)}}
+			>
+				<span class="dock-icon">
+					{#if pinned.id == 'launcher-apps'}
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<rect x="2"  y="2"  width="9" height="9" rx="2.5" fill="white" fill-opacity="0.85"/>
+							<rect x="13" y="2"  width="9" height="9" rx="2.5" fill="white" fill-opacity="0.85"/>
+							<rect x="2"  y="13" width="9" height="9" rx="2.5" fill="white" fill-opacity="0.85"/>
+							<rect x="13" y="13" width="9" height="9" rx="2.5" fill="white" fill-opacity="0.85"/>
+						</svg>
+					{:else if pinned.id == 'launcher-widgets'}
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<rect x="2"  y="2"  width="20" height="8" rx="2.5" fill="white" fill-opacity="0.85"/>
+							<rect x="2"  y="13" width="9" height="9" rx="2.5" fill="white" fill-opacity="0.85"/>
+							<rect x="13" y="13" width="9" height="9" rx="2.5" fill="white" fill-opacity="0.85"/>
+						</svg>
+					{:else if pinned.icon?.includes('/')}
+						<img src={pinned.icon} alt={pinned.label} class="dock-icon-img"/>
+					{:else}
+						{pinned.icon}
+					{/if}
+				</span>
+				<span class="dock-label">{pinned.label}</span>
+				{#if activeItem === pinned.id}<div class="dock-dot"></div>{/if}
+			</button>
+		{/each}
 	</div>
 </div>
 
 <style>
-	.launcher-overlay {
-		position: fixed;
-		inset: 0;
-		z-index: 9500;
-		background: rgba(0, 0, 0, 0.25);
-		backdrop-filter: blur(4px);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.launcher {
-		background: rgba(28, 28, 42, 0.94);
-		backdrop-filter: blur(40px);
-		border: 1px solid rgba(255, 255, 255, 0.12);
-		border-radius: 16px;
-		padding: 24px;
-		box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
-		min-width: 320px;
-	}
-
-	.launcher-title {
-		font-size: 12px;
-		font-weight: 600;
-		color: rgba(255, 255, 255, 0.4);
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		margin-bottom: 16px;
-	}
-
-	.launcher-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 8px;
-	}
-
-	.launcher-app {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 6px;
-		padding: 14px 8px;
-		background: rgba(255, 255, 255, 0.06);
-		border: 1px solid rgba(255, 255, 255, 0.08);
-		border-radius: 12px;
-		color: white;
-		cursor: pointer;
-		transition: background 0.15s, transform 0.1s;
-		font-family: inherit;
-	}
-	.launcher-app:hover { background: rgba(255, 255, 255, 0.14); transform: scale(1.04); }
-
-	.la-icon  { font-size: 28px; }
-	.la-label { font-size: 11px; color: rgba(255,255,255,0.8); }
-
+	/* ── Dock ────────────────────────────────────────────────────────────────── */
 	.dock-wrap {
 		display: flex;
 		justify-content: center;
@@ -212,47 +150,15 @@
 		filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
 		display: block;
 	}
-	.launcher-btn .dock-icon { font-size: 22px; }
+	.dock-item .dock-icon { font-size: 22px; }
 
-	.launchpad-icon {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 4px;
-		width: 24px;
-		height: 24px;
-		padding: 1px;
+	.dock-icon-img {
+		width: 32px;
+		height: 32px;
+		object-fit: contain;
+		filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+		display: block;
 	}
-
-	.launchpad-icon span {
-		background: rgba(255, 255, 255, 0.85);
-		border-radius: 4px;
-		transition: background 0.15s;
-	}
-	.dock-item:hover .launchpad-icon span,
-	.dock-active .launchpad-icon span { background: white; }
-
-	.widget-icon {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		grid-template-rows: 1fr 1fr;
-		gap: 4px;
-		width: 24px;
-		height: 24px;
-		padding: 1px;
-	}
-
-	.widget-icon span {
-		background: rgba(255, 255, 255, 0.85);
-		border-radius: 3px;
-		transition: background 0.15s;
-	}
-
-	.widget-icon .wi-wide {
-		grid-column: 1 / 3;
-		border-radius: 4px;
-	}
-
-	.dock-item:hover .widget-icon span { background: white; }
 
 	.dock-label {
 		position: absolute;
@@ -286,12 +192,4 @@
 		transform: translateX(-50%);
 	}
 	.dock-dot.hidden { display: none; }
-
-	.trash-drop-zone {
-		transition: background 0.15s, transform 0.15s;
-	}
-	.trash-ready:hover {
-		background: rgba(220, 60, 60, 0.35) !important;
-		transform: translateY(-8px) scale(1.18);
-	}
 </style>

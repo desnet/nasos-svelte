@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { appStore, type AppCategory, type StoreApp } from '$lib/stores/appstore.svelte'
+	import UiInputSearch from '$lib/components/UiInputSearch.svelte'
 
 	const CATEGORIES: AppCategory[] = ['Все', 'Продуктивность', 'Утилиты', 'Игры', 'Медиа', 'Разработка']
 
@@ -30,7 +31,7 @@
 			<span>🏪</span>
 			<span>NasStore</span>
 		</div>
-		<input class="search" type="text" placeholder="🔍 Поиск..." bind:value={search} />
+		<UiInputSearch bind:value={search} />
 		<nav class="nav">
 			{#each CATEGORIES as cat (cat)}
 				<button
@@ -199,20 +200,7 @@
 	}
 	.store-logo span:first-child { font-size: 20px; }
 
-	.search {
-		padding: 6px 10px;
-		border-radius: 20px;
-		border: 1px solid #dde0ea;
-		background: #f5f6fa;
-		color: #333;
-		font-size: 12px;
-		outline: none;
-		font-family: inherit;
-		margin-bottom: 4px;
-	}
-	.search:focus { border-color: #4a90d9; background: white; }
-
-	.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav { display: flex; flex-direction: column; gap: 2px; }
 
 	.nav-item {
 		padding: 6px 12px;

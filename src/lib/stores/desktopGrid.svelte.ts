@@ -5,6 +5,7 @@ export type GridItem = {
 	colSpan: number  // width in cells
 	rowSpan: number  // height in cells
 	color?: string
+	resizable?: boolean
 }
 
 function createDesktopGrid() {
@@ -24,7 +25,11 @@ function createDesktopGrid() {
 		return items.map((item) => (item.id === id ? { ...item, col, row } : item))
 	}
 
-	return { isOccupied, move }
+	function resize(items: GridItem[], id: number, colSpan: number, rowSpan: number): GridItem[] {
+		return items.map((item) => (item.id === id ? { ...item, colSpan, rowSpan } : item))
+	}
+
+	return { isOccupied, move, resize }
 }
 
 export const desktopGrid = createDesktopGrid()

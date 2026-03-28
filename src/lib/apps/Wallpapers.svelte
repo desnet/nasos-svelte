@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { wallpaperStore, WALLPAPERS, type Wallpaper } from '$lib/stores/wallpaper.svelte'
+	import UiButtonGroup from '$lib/components/UiButtonGroup.svelte'
 
 	const categories = ['Все', ...new Set(WALLPAPERS.map((w) => w.category))]
 
@@ -57,15 +58,7 @@
 	<!-- Галерея -->
 	<div class="gallery-pane">
 		<!-- Категории -->
-		<div class="cats">
-			{#each categories as cat (cat)}
-				<button
-					class="cat-btn"
-					class:active={selectedCat === cat}
-					onclick={() => (selectedCat = cat)}
-				>{cat}</button>
-			{/each}
-		</div>
+		<UiButtonGroup items={categories} value={selectedCat} onchange={(v) => (selectedCat = v)} />
 
 		<!-- Сетка -->
 		<div class="grid">
@@ -220,34 +213,7 @@
 		overflow: hidden;
 	}
 
-	.cats {
-		display: flex;
-		gap: 6px;
-		padding: 10px 14px;
-		border-bottom: 1px solid #dde0ea;
-		background: white;
-		flex-wrap: wrap;
-	}
-
-	.cat-btn {
-		padding: 4px 12px;
-		border-radius: 20px;
-		border: 1px solid #dde0ea;
-		background: white;
-		color: #555;
-		font-size: 12px;
-		cursor: pointer;
-		font-family: inherit;
-	}
-	.cat-btn:hover { border-color: #4a90d9; color: #4a90d9; }
-	.cat-btn.active {
-		background: #4a90d9;
-		border-color: #4a90d9;
-		color: white;
-		font-weight: 600;
-	}
-
-	.grid {
+.grid {
 		flex: 1;
 		overflow-y: auto;
 		padding: 12px;

@@ -1,71 +1,71 @@
+export type WindowOptions = {
+	titlebar?: boolean   // показывать titlebar (по умолчанию true)
+	resizable?: boolean  // разрешить изменение размера (по умолчанию true)
+	overlay?: boolean    // показывать оверлей поверх контента (по умолчанию false)
+	focusDim?: boolean   // полупрозрачность при потере фокуса (по умолчанию true)
+	position?: 'auto' | 'center' | { x: number; y: number }
+	variant?: 'default' | 'transparent'
+	width?: number | string
+	height?: number | string
+}
+
 export type WindowApp = {
 	id: number
 	title: string
 	icon: string
 	x: number
 	y: number
-	width: number
-	height: number
+	width: number | string
+	height: number | string
+	isCentered: boolean
 	minimized: boolean
 	maximized: boolean
 	focused: boolean
 	component: string
-	args?: Record<string, unknown>
+	componentArgs?: Record<string, unknown>
+	options?: WindowOptions
 }
 
-export type DesktopIconType = 'app' | 'url'
-
-export type DesktopIcon = {
-	id: number
-	label: string
-	icon: string
-	type: DesktopIconType
-	app: string
-	url?: string
-}
-
-export const AVAILABLE_APPS: { id: string; label: string; icon: string }[] = [
-	{ id: 'explorer',  label: 'Проводник',           icon: '📁' },
-	{ id: 'notepad',   label: 'Блокнот',             icon: '📝' },
-	{ id: 'trash',     label: 'Корзина',             icon: '🗑️' },
-	{ id: 'about',     label: 'Обо мне',             icon: '💻' },
-	{ id: 'appstore',  label: 'Магазин приложений',  icon: '🏪' },
-	{ id: 'wallpapers',label: 'Обои рабочего стола', icon: '🖼️' }
-]
+import { apps } from '$lib/stores/apps.svelte'
 
 function createDesktop() {
 	let windows = $state<WindowApp[]>([])
 	let nextId = $state(1)
 	let zOrder = $state<number[]>([])
 
-	// let desktopIcons = $state<DesktopIcon[]>([
-	// 	{ id: 1, label: 'Проводник', icon: '📁', type: 'app', app: 'explorer'  },
-	// 	{ id: 2, label: 'Блокнот',   icon: '📝', type: 'app', app: 'notepad'   },
-	// 	{ id: 3, label: 'Обо мне',   icon: '💻', type: 'app', app: 'about'     },
-	// 	{ id: 4, label: 'Магазин',   icon: '🏪', type: 'app', app: 'appstore'  },
-	// 	{ id: 5, label: 'Обои',      icon: '🖼️', type: 'app', app: 'wallpapers'}
-	// ])
-	// let nextIconId = $state(6)
-
-	function openApp(app: string, args?: Record<string, unknown>) {
+	function openApp(app: string, args?: Record<string, unknown>, options?: WindowOptions) {
 		const existing = windows.find((w) => w.component === app && !w.minimized)
 		if (existing) { focusWindow(existing.id); return }
 		const minimized = windows.find((w) => w.component === app && w.minimized)
 		if (minimized) { restoreWindow(minimized.id); focusWindow(minimized.id); return }
 
-		const appMeta = AVAILABLE_APPS.find(a => a.id === app)
+		const appMeta = apps.list().find(a => a.id === app)
 		const id = nextId++
+		const width:  number | string = options?.width  ?? (app === 'explorer' ? 680 : app === 'appstore' ? 780 : app === 'wallpapers' ? 720 : 500)
+		const height: number | string = options?.height ?? (app === 'explorer' ? 460 : app === 'appstore' ? 520 : app === 'wallpapers' ? 480 : 380)
+
+		const pos = options?.position ?? 'auto'
 		const offset = (windows.filter((w) => !w.minimized).length % 6) * 24
+		let x = 80 + offset
+		let y = 60 + offset
+		let isCentered = false
+
+		if (pos === 'center') {
+			isCentered = true
+		} else if (typeof pos === 'object') {
+			x = pos.x
+			y = pos.y
+		}
+
 		windows.push({
 			id,
 			title: appMeta?.label ?? app,
 			icon: appMeta?.icon ?? '🖥️',
-			x: 80 + offset, y: 60 + offset,
-			width:  app === 'explorer' ? 680 : app === 'appstore' ? 780 : app === 'wallpapers' ? 720 : 500,
-			height: app === 'explorer' ? 460 : app === 'appstore' ? 520 : app === 'wallpapers' ? 480 : 380,
+			x, y, width, height, isCentered,
 			minimized: false, maximized: false, focused: true,
 			component: app,
-			args
+			componentArgs: args,
+			options,
 		})
 		zOrder.push(id)
 		focusWindow(id)
@@ -98,7 +98,7 @@ function createDesktop() {
 	}
 
 	function moveWindow(id: number, x: number, y: number) {
-		windows = windows.map((w) => (w.id === id ? { ...w, x, y } : w))
+		windows = windows.map((w) => (w.id === id ? { ...w, x, y, isCentered: false } : w))
 	}
 
 	function resizeWindow(id: number, width: number, height: number) {
@@ -106,24 +106,13 @@ function createDesktop() {
 	}
 
 	function getZIndex(id: number) {
+		const win = windows.find((w) => w.id === id)
+		if (win?.options?.overlay) return 9001
 		return 100 + zOrder.indexOf(id)
 	}
 
-	// function addIcon(data: Omit<DesktopIcon, 'id'>) {
-	// 	desktopIcons.push({ id: nextIconId++, ...data })
-	// }
-
-	// function updateIcon(id: number, patch: Partial<Omit<DesktopIcon, 'id'>>) {
-	// 	desktopIcons = desktopIcons.map((ic) => (ic.id === id ? { ...ic, ...patch } : ic))
-	// }
-
-	// function removeIcon(id: number) {
-	// 	desktopIcons = desktopIcons.filter((ic) => ic.id !== id)
-	// }
-
 	return {
 		get windows() { return windows },
-		// get desktopIcons() { return desktopIcons },
 		openApp,
 		focusWindow,
 		closeWindow,
@@ -133,9 +122,6 @@ function createDesktop() {
 		moveWindow,
 		resizeWindow,
 		getZIndex,
-		// addIcon,
-		// updateIcon,
-		// removeIcon
 	}
 }
 

@@ -6,14 +6,19 @@
 		args?: Record<string, unknown>
 	}
 
-	let { config, ondblclick } = $props<{
+	let { config, ondblclick, onclick } = $props<{
 		config: ShortcutConfig
 		ondblclick?: (config: ShortcutConfig) => void
+		onclick?: (config: ShortcutConfig) => void
 	}>()
 </script>
 
-<button class="shortcut" ondblclick={() => ondblclick?.(config)}>
-	<span class="shortcut-icon">{config.icon}</span>
+<button class="shortcut" ondblclick={() => ondblclick?.(config)} onclick={() => onclick?.(config)}>
+	{#if config.icon.includes('/')}
+		<img src={config.icon} alt={config.label} class="shortcut-icon-img"/>
+	{:else}
+		<span class="shortcut-icon">{config.icon}</span>
+	{/if}
 	<span class="shortcut-label">{config.label}</span>
 </button>
 
@@ -46,6 +51,13 @@
 		font-size: 32px;
 		line-height: 1;
 		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+		pointer-events: none;
+	}
+	.shortcut-icon-img {
+		width: 40px;
+		height: 40px;
+		object-fit: contain;
+		filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
 		pointer-events: none;
 	}
 

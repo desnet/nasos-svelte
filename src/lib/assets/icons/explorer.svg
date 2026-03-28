@@ -1,0 +1,23 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#60C3FB"/>
+      <stop offset="100%" stop-color="#1A8DE3"/>
+    </linearGradient>
+    <linearGradient id="fback" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0.18"/>
+    </linearGradient>
+    <linearGradient id="ffront" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#dceffe" stop-opacity="0.95"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- folder back -->
+  <path d="M11 27 C11 24 13 22 16 22 L26 22 C28.5 22 29.5 23.5 30.5 25.5 L32 28 L52 28 C53.5 28 54 29 54 30.5 L54 47 C54 50 52 51 49 51 L15 51 C12 51 11 49.5 11 47 Z" fill="url(#fback)"/>
+  <!-- folder front body -->
+  <rect x="11" y="30" width="43" height="21" rx="3" fill="url(#ffront)"/>
+  <!-- folder tab -->
+  <path d="M11 27 L11 32 L54 32 L54 30.5 C54 29 53.5 28 52 28 L32 28 L30.5 25.5 C29.5 23.5 28.5 22 26 22 L16 22 C13 22 11 24 11 27 Z" fill="url(#ffront)"/>
+</svg>

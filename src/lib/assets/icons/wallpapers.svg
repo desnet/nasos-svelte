@@ -1,0 +1,37 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7B61FF"/>
+      <stop offset="100%" stop-color="#3A1FA8"/>
+    </linearGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5BA3E8"/>
+      <stop offset="100%" stop-color="#8BC4F5"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFE066"/>
+      <stop offset="100%" stop-color="#FFB300"/>
+    </linearGradient>
+    <clipPath id="frame">
+      <rect x="10" y="13" width="44" height="34" rx="4"/>
+    </clipPath>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- picture frame -->
+  <rect x="10" y="13" width="44" height="34" rx="4" fill="#1a0e5a" stroke="white" stroke-opacity="0.25" stroke-width="1"/>
+  <!-- sky -->
+  <rect x="10" y="13" width="44" height="21" rx="0" fill="url(#sky)" clip-path="url(#frame)"/>
+  <!-- sun -->
+  <circle cx="42" cy="22" r="6" fill="url(#sun)" clip-path="url(#frame)"/>
+  <!-- mountains back -->
+  <path d="M10 40 L22 22 L34 38 L44 26 L54 34 L54 47 L10 47 Z" fill="#2D4A7A" clip-path="url(#frame)"/>
+  <!-- mountains front -->
+  <path d="M10 47 L20 33 L30 45 L42 31 L54 42 L54 47 Z" fill="#1A2E50" clip-path="url(#frame)"/>
+  <!-- ground -->
+  <rect x="10" y="44" width="44" height="3" fill="#0F1A30" clip-path="url(#frame)"/>
+  <!-- frame bottom bar -->
+  <rect x="10" y="47" width="44" height="5" rx="3" fill="white" fill-opacity="0.12"/>
+  <!-- stand -->
+  <rect x="28" y="47" width="8" height="5" fill="white" fill-opacity="0.1"/>
+  <rect x="22" y="51" width="20" height="3" rx="1.5" fill="white" fill-opacity="0.18"/>
+</svg>

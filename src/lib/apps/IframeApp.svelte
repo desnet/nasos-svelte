@@ -1,14 +1,9 @@
 <script lang="ts">
-	import { getContext } from 'svelte'
-	import { desktop } from '$lib/stores/desktop.svelte'
-
-	const winId = getContext<number>('windowId')
-	const win = $derived(desktop.windows.find((w) => w.id === winId))
-	const url = $derived(win?.args?.url as string | undefined)
+	let { url } = $props<{ url?: string }>()
 </script>
 
 {#if url}
-	<iframe src={url} title={win?.title} sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+	<iframe src={url} title="iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
 {:else}
 	<div class="empty">Нет URL</div>
 {/if}

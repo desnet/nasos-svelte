@@ -19,7 +19,7 @@
 	import AppStore from '$lib/apps/AppStore.svelte'
 	import Wallpapers from '$lib/apps/Wallpapers.svelte'
 	import IframeApp from '$lib/apps/IframeApp.svelte'
-	import ShortcutDialog from '$lib/components/ShortcutDialog.svelte'
+	import Launcher from '$lib/apps/Launcher.svelte'
 
 	const APP_COMPONENTS: Record<string, Component> = {
 		explorer:          Explorer,
@@ -29,7 +29,7 @@
 		appstore:          AppStore,
 		wallpapers:        Wallpapers,
 		iframe:            IframeApp,
-		'shortcut-dialog': ShortcutDialog
+		launcher:          Launcher
 	}
 
 	// Widgets
@@ -68,8 +68,8 @@
 		{ id: 4, col: COL, row: shortcutRow(3), colSpan: SPAN_W, rowSpan: SPAN_H, shortcut: { icon: '🗑️', label: 'Корзина',   app: 'trash'      } },
 		{ id: 5, col: COL, row: shortcutRow(4), colSpan: SPAN_W, rowSpan: SPAN_H, shortcut: { icon: '🏪', label: 'Магазин',   app: 'appstore'   } },
 		{ id: 6, col: COL, row: shortcutRow(5), colSpan: SPAN_W, rowSpan: SPAN_H, shortcut: { icon: '🖼️', label: 'Обои',      app: 'wallpapers' } },
-		{ id: 7, col: 8,   row: 2,              colSpan: 10,      rowSpan: 11,      widget: { name: 'clock',    app: 'clock'    } },
-		{ id: 8, col: 8,   row: 14,             colSpan: 10,      rowSpan: 12,      widget: { name: 'calendar', app: 'calendar' } },
+		{ id: 7, col: 8,   row: 2,              colSpan: 10,     rowSpan: 11,     resizable: true, widget:   { name: 'clock',    app: 'clock'    } },
+		{ id: 8, col: 8,   row: 14,             colSpan: 10,     rowSpan: 11,     resizable: true, widget:   { name: 'calendar', app: 'calendar' } },
 	])
 
 </script>
@@ -93,11 +93,22 @@
 			{/each}
 		</DesktopGrid>
 
-		<!-- Windows overlay -->
+		<!-- Desktop overlay backdrop (для окон с options.overlay) -->
+		{#if desktop.windows.some(w => w.options?.overlay && !w.minimized)}
+			<div
+				class="desktop-overlay"
+				role="presentation"
+				onclick={() => desktop.windows
+					.filter(w => w.options?.overlay && !w.minimized)
+					.forEach(w => desktop.closeWindow(w.id))}
+			></div>
+		{/if}
+
+		<!-- Windows -->
 		{#each desktop.windows as win (win.id)}
 			{@const AppComp = APP_COMPONENTS[win.component]}
 			<Window id={win.id}>
-				{#if AppComp}<AppComp />{/if}
+				{#if AppComp}<AppComp {...(win.componentArgs ?? {})} />{/if}
 			</Window>
 		{/each}
 	</div>
@@ -127,5 +138,14 @@
 		position: relative;
 		overflow: hidden;
 		min-height: 0;
+	}
+
+	.desktop-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 9000;
+		background: rgba(0, 0, 0, 0.38);
+		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(6px);
 	}
 </style>

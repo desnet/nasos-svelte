@@ -51,10 +51,28 @@
 		return drag?.item.id === id
 	}
 
-	setContext('desktopGrid', { startDrag, isDragging, get cellW() { return cellW }, get cellH() { return cellH } })
+	function applyResize(item: GridItem, colSpan: number, rowSpan: number) {
+		onItemsChange(desktopGrid.resize(items, item.id, colSpan, rowSpan))
+	}
+
+	function isResizeValid(item: GridItem, colSpan: number, rowSpan: number): boolean {
+		if (item.col + colSpan - 1 > cols) return false
+		if (item.row + rowSpan - 1 > rows) return false
+		return !desktopGrid.isOccupied(items, item.col, item.row, colSpan, rowSpan, item.id)
+	}
+
+	setContext('desktopGrid', {
+		startDrag, isDragging, applyResize, isResizeValid,
+		get cellW() { return cellW },
+		get cellH() { return cellH },
+		get cols()  { return cols  },
+		get rows()  { return rows  }
+	})
 
 	$effect(() => {
-		document.body.style.cursor = drag ? 'move' : ''
+		if (drag) document.body.style.cursor = 'move'
+		else if (dragState.resizingActive) document.body.style.cursor = 'se-resize'
+		else document.body.style.cursor = ''
 	})
 
 	function onMousemove(e: MouseEvent) {
