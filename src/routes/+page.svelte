@@ -14,40 +14,6 @@
 	import Shortcut from '$lib/components/Shortcut.svelte'
 	import Widget from '$lib/components/Widget.svelte'
 
-	// Apps
-	import Explorer from '$lib/apps/Explorer.svelte'
-	import Notepad from '$lib/apps/Notepad.svelte'
-	import About from '$lib/apps/About.svelte'
-	import Trash from '$lib/apps/Trash.svelte'
-	import AppStore from '$lib/apps/AppStore.svelte'
-	import Wallpapers from '$lib/apps/Wallpapers.svelte'
-	import IframeApp from '$lib/apps/IframeApp.svelte'
-	import Launcher from '$lib/apps/Launcher.svelte'
-
-	const APP_COMPONENTS: Record<string, Component> = {
-		explorer:          Explorer,
-		notepad:           Notepad,
-		about:             About,
-		trash:             Trash,
-		appstore:          AppStore,
-		wallpapers:        Wallpapers,
-		iframe:            IframeApp,
-		launcher:          Launcher
-	}
-
-	// Widgets
-	import ClockWidget from '$lib/widgets/ClockWidget.svelte'
-	import CalendarWidget from '$lib/widgets/CalendarWidget.svelte'
-	import NotesWidget from '$lib/widgets/NotesWidget.svelte'
-	import SysmonWidget from '$lib/widgets/SysmonWidget.svelte'
-
-	const WIDGET_COMPONENTS: Record<string, Component> = {
-		clock:    ClockWidget,
-		calendar: CalendarWidget,
-		notes:    NotesWidget,
-		sysmon:   SysmonWidget,
-	}
-
 	// Layout components
 	import MenuBar from '$lib/components/MenuBar.svelte'
 	import DesktopGrid from '$lib/components/DesktopGrid.svelte'
@@ -55,7 +21,6 @@
 
 	// Window infrastructure
 	import Window from '$lib/components/Window.svelte'
-	import type { Component } from 'svelte'
 
 	type DesktopItem = GridItem & { shortcut?: ShortcutConfig; widget?: WidgetConfig }
 
@@ -132,7 +97,7 @@
 					{#if item.shortcut}
 						<Shortcut config={item.shortcut} ondblclick={(cfg) => desktop.openApp(cfg.app, cfg.args)} />
 					{:else if item.widget}
-						{@const WidgetSomp = WIDGET_COMPONENTS[item.widget.name]}
+						{@const WidgetSomp = widgets.getComponent(item.widget.name)}
 						<Widget config={item.widget} ondblclick={(cfg) => cfg.app && desktop.openApp(cfg.app, cfg.args)}>
 							{#if WidgetSomp}<WidgetSomp />{/if}
 						</Widget>
@@ -154,7 +119,7 @@
 
 		<!-- Windows -->
 		{#each desktop.windows as win (win.id)}
-			{@const AppComp = APP_COMPONENTS[win.component]}
+			{@const AppComp = apps.getComponent(win.component)}
 			<Window id={win.id}>
 				{#if AppComp}<AppComp {...(win.componentArgs ?? {})} />{/if}
 			</Window>
