@@ -38,10 +38,14 @@
 	// Widgets
 	import ClockWidget from '$lib/widgets/ClockWidget.svelte'
 	import CalendarWidget from '$lib/widgets/CalendarWidget.svelte'
+	import NotesWidget from '$lib/widgets/NotesWidget.svelte'
+	import SysmonWidget from '$lib/widgets/SysmonWidget.svelte'
 
 	const WIDGET_COMPONENTS: Record<string, Component> = {
 		clock:    ClockWidget,
 		calendar: CalendarWidget,
+		notes:    NotesWidget,
+		sysmon:   SysmonWidget,
 	}
 
 	// Layout components

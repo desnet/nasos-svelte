@@ -61,13 +61,14 @@
 			<div class="dock-sep"></div>
 		{/if}
 
-		{#each taskbar.pinnedList() as pinned (pinned.id)}
+		{#each pinnedList as pinned (pinned.id)}
 			<DockItem
 				label={pinned.label ?? ''}
 				active={activeItem === pinned.id}
 				showDot={activeItem === pinned.id}
 				dropClass={pinned.app === 'trash' ? 'trash-drop-zone' : ''}
 				onclick={(e) => { e.stopPropagation(); togglePunnedApp(pinned) }}
+				onDrop={(el) => console.log(el)}
 			>
 				{#if pinned.id == 'launcher-apps'}
 					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

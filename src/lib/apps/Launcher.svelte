@@ -179,12 +179,14 @@
 		/>
 	</div>
 
-	<UiButtonGroup
-		items={['Приложения', 'Виджеты']}
-		value={mode === 'apps' ? 'Приложения' : 'Виджеты'}
-		onchange={(v) => { mode = v === 'Приложения' ? 'apps' : 'widgets'; search = '' }}
-		variant="transparent"
-	/>
+	<div class="launcher-filter">
+		<UiButtonGroup
+			items={['Приложения', 'Виджеты']}
+			value={mode === 'apps' ? 'Приложения' : 'Виджеты'}
+			onchange={(v) => { mode = v === 'Приложения' ? 'apps' : 'widgets'; search = '' }}
+			variant="transparent"
+		/>
+	</div>
 
 	<div class="launcher-body" bind:clientWidth={bodyW} bind:clientHeight={bodyH}>
 		{#key `${mode}-${page}`}
@@ -256,6 +258,10 @@
 		padding: 12px 16px 8px;
 	}
 
+	.launcher-filter {
+		padding: 0 16px;
+	}
+
 	.launcher-body {
 		flex: 1;
 		position: relative;
@@ -265,7 +271,7 @@
 
 	.launcher-page {
 		position: absolute;
-		inset: 0;
+		inset: 0 16px;
 	}
 
 	/* Пагинация */
