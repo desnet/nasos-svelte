@@ -2,6 +2,9 @@
 	// Stores
 	import { desktop } from '$lib/stores/desktop.svelte'
 	import { wallpaperStore } from '$lib/stores/wallpaper.svelte'
+	import { launcherDrag } from '$lib/stores/launcherDrag.svelte'
+	import { apps } from '$lib/stores/apps.svelte'
+	import { widgets } from '$lib/stores/widgets.svelte'
 	import type { GridItem } from '$lib/stores/desktopGrid.svelte'
 	import type { ShortcutConfig } from '$lib/components/Shortcut.svelte'
 	import type { WidgetConfig } from '$lib/components/Widget.svelte'
@@ -61,6 +64,47 @@
 		return 2 + index * (SPAN_H + ROW_GAP)
 	}
 
+	let desktopAreaEl = $state<HTMLDivElement | undefined>(undefined)
+	let nextItemId = $state(100)
+
+	// Обработка дропа из лаунчера на рабочий стол
+	$effect(() => {
+		const drop = launcherDrag.pendingDrop
+		if (!drop) return
+
+		const rect = desktopAreaEl?.getBoundingClientRect()
+		const gridLeft = rect?.left ?? 0
+		const gridTop  = rect?.top  ?? 0
+		const CELL = 22
+
+		const col = Math.max(1, Math.floor((drop.clientX - gridLeft) / CELL) + 1)
+		const row = Math.max(1, Math.floor((drop.clientY - gridTop)  / CELL) + 1)
+		const id  = nextItemId++
+
+		if (drop.mode === 'apps') {
+			const app = apps.list().find(a => a.id === drop.itemId)
+			if (app) {
+				gridItems = [...gridItems, {
+					id, col, row, colSpan: 4, rowSpan: 3,
+					shortcut: { icon: app.icon, label: app.label, app: app.id },
+				}]
+			}
+		} else {
+			const widget = widgets.list().find(w => w.type === drop.itemId)
+			if (widget) {
+				gridItems = [...gridItems, {
+					id, col, row, colSpan: 10, rowSpan: 11,
+					resizable: true,
+					widget: { name: widget.type, app: widget.type },
+				}]
+			}
+		}
+
+		// Переоткрываем лаунчер
+		desktop.openApp('launcher', drop.reopenArgs, drop.reopenOptions)
+		launcherDrag.clearDrop()
+	})
+
 	let gridItems = $state<DesktopItem[]>([
 		{ id: 1, col: COL, row: shortcutRow(0), colSpan: SPAN_W, rowSpan: SPAN_H, shortcut: { icon: '📁', label: 'Проводник', app: 'explorer'   } },
 		{ id: 2, col: COL, row: shortcutRow(1), colSpan: SPAN_W, rowSpan: SPAN_H, shortcut: { icon: '📝', label: 'Блокнот',   app: 'notepad'    } },
@@ -77,7 +121,7 @@
 <div class="desktop" style="background: {wallpaperStore.current.css}">
 	<MenuBar />
 
-	<div class="desktop-area">
+	<div class="desktop-area" bind:this={desktopAreaEl}>
 		<DesktopGrid cellW={22} cellH={22} items={gridItems} onItemsChange={(v) => (gridItems = v as DesktopItem[])} onItemRemove={(id) => (gridItems = gridItems.filter(item => item.id !== id))}>
 			{#each gridItems as item (item.id)}
 				<DesktopGridCell {item}>

@@ -5,6 +5,7 @@
 		name: string
 		app?: string
 		args?: Record<string, unknown>
+		variant?: 'default' | 'transparent'
 	}
 
 	let { config, ondblclick, children } = $props<{
@@ -14,7 +15,7 @@
 	}>()
 </script>
 
-<div class="widget" ondblclick={() => ondblclick?.(config)} role="presentation">
+<div class="widget" class:transparent={config.variant === 'transparent'} ondblclick={() => ondblclick?.(config)} role="presentation">
 	{#if children}
 		{@render children()}
 	{/if}
@@ -37,5 +38,13 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+	}
+
+	.widget.transparent {
+		background: rgba(255, 255, 255, 0.01);
+		border-color: rgba(255, 255, 255, 0.22);
+		border-radius: 20px;
+		box-shadow: none;
+		backdrop-filter: blur(12px);
 	}
 </style>

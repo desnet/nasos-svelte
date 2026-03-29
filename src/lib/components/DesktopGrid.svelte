@@ -2,6 +2,7 @@
 	import { setContext } from 'svelte'
 	import { desktopGrid, type GridItem } from '$lib/stores/desktopGrid.svelte'
 	import { dragState } from '$lib/stores/dragState.svelte'
+	import { launcherDrag } from '$lib/stores/launcherDrag.svelte'
 	import type { Snippet } from 'svelte'
 
 	let { cellW = 22, cellH = 22, items, onItemsChange, onItemRemove, onItemDragOut, onGhostOut, onGhostIn, allowDragOut = false, children } = $props<{
@@ -11,7 +12,7 @@
 		onItemsChange: (items: GridItem[]) => void
 		onItemRemove?: (id: number) => void
 		onItemDragOut?: (id: number, clientX: number, clientY: number) => void
-		onGhostOut?: (item: GridItem) => void
+		onGhostOut?: (item: GridItem, mouseOffsetX: number, mouseOffsetY: number, clientX: number, clientY: number, adopt: () => HTMLDivElement | null) => void
 		onGhostIn?: (item: GridItem) => void
 		allowDragOut?: boolean
 		children: Snippet
@@ -70,6 +71,40 @@
 
 	// Cleanup при уничтожении компонента
 	$effect(() => () => removeBodyGhost())
+
+	// ── External drag (launcherDrag) snap-to-grid ────────────────────────────────
+	let externalDragOver = $state(false)
+
+	$effect(() => {
+		if (!launcherDrag.active) {
+			externalDragOver = false
+			return
+		}
+
+		function onExternalMove(e: MouseEvent) {
+			if (!containerEl) return
+			const rect = containerEl.getBoundingClientRect()
+			const inside = e.clientX >= rect.left && e.clientX <= rect.right
+				&& e.clientY >= rect.top  && e.clientY <= rect.bottom
+
+			externalDragOver = inside
+
+			if (!inside) return
+
+			// Snap ghost к ближайшей ячейке грида
+			const col = Math.max(1, Math.min(Math.floor((e.clientX - rect.left - launcherDrag.mouseOffX) / cellW) + 1, cols))
+			const row = Math.max(1, Math.min(Math.floor((e.clientY - rect.top  - launcherDrag.mouseOffY) / cellH) + 1, rows))
+			const snappedX = rect.left + (col - 1) * cellW
+			const snappedY = rect.top  + (row - 1) * cellH
+			launcherDrag.snapGhost(snappedX, snappedY)
+		}
+
+		window.addEventListener('mousemove', onExternalMove)
+		return () => {
+			window.removeEventListener('mousemove', onExternalMove)
+			externalDragOver = false
+		}
+	})
 
 	// ────────────────────────────────────────────────────────────────────────────
 
@@ -130,9 +165,15 @@
 		if (isOutside) {
 			// Создаём body-гост при первом выходе за границу
 			if (!drag.outsideGrid) {
-				createBodyGhost(drag.item)
+				const { item, mouseOffsetX, mouseOffsetY } = drag
+				createBodyGhost(item)
 				drag = { ...drag, outsideGrid: true, valid: false }
-				onGhostOut?.(drag.item)
+				// adopt() передаёт владение элементом внешнему обработчику
+				onGhostOut?.(item, mouseOffsetX, mouseOffsetY, e.clientX, e.clientY, () => {
+					const el = bodyGhostEl
+					bodyGhostEl = null
+					return el
+				})
 			}
 			// Позицию обновляем напрямую — без Svelte-реактивности
 			moveBodyGhost(e.clientX, e.clientY)
@@ -173,7 +214,7 @@
 
 <div
 	class="grid"
-	class:grid-dragging={drag !== null}
+	class:grid-dragging={drag !== null || externalDragOver}
 	style="--cell-w: {cellW}px; --cell-h: {cellH}px;"
 	bind:this={containerEl}
 	bind:clientWidth={containerW}
