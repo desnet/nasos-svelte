@@ -123,7 +123,7 @@ export const WALLPAPERS: Wallpaper[] = [
 ]
 
 function createWallpaperStore() {
-	let current = $state<Wallpaper>(WALLPAPERS[0])
+	let current = $state<Wallpaper>(WALLPAPERS[7])
 
 	function set(w: Wallpaper) {
 		current = w

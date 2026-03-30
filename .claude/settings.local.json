@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "mcp__ide__getDiagnostics",
-      "Bash(/Users/mac/dev/VSCode/nasos-svelte/.gitignore:*)"
+      "Bash(/Users/mac/dev/VSCode/nasos-svelte/.gitignore:*)",
+      "Bash(npm install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm run:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

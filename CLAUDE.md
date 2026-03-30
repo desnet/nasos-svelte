@@ -1,79 +1,42 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Этот файл содержит инструкции для Claude Code (claude.ai/code) при работе с кодом в данном репозитории.
 
-## Commands
+## Команды
 
 ```bash
-npm run dev          # Start development server
-npm run build        # Production build
-npm run preview      # Preview production build
-npm run check        # Type-check with svelte-check
-npm run check:watch  # Type-check in watch mode
-npm run lint         # Run Prettier + ESLint checks
-npm run format       # Format code with Prettier
+npm run dev          # Запустить сервер разработки
+npm run build        # Сборка для продакшена
+npm run preview      # Предпросмотр продакшен-сборки
+npm run check        # Проверка типов через svelte-check
+npm run check:watch  # Проверка типов в режиме наблюдения
+npm run lint         # Запуск проверок Prettier + ESLint
+npm run format       # Форматирование кода через Prettier
 ```
 
-## Architecture
+## Архитектура
 
-This is a **SvelteKit 2** project using **Svelte 5 with Runes** (reactive primitives). Runes mode is enabled globally via `svelte.config.js`.
+Проект на **SvelteKit 2** с использованием **Svelte 5 и Runes** (реактивные примитивы). Режим Runes включён глобально через `svelte.config.js`.
 
-**Routing:** File-based via `src/routes/`. Files prefixed with `+` are SvelteKit conventions (`+page.svelte`, `+layout.svelte`, `+page.server.ts`, etc.).
+**Роутинг:** Файловый, через `src/routes/`. Файлы с префиксом `+` — соглашения SvelteKit (`+page.svelte`, `+layout.svelte`, `+page.server.ts` и т.д.).
 
-**Shared code:** `src/lib/` — importable as `$lib/` alias throughout the app.
+**Общий код:** `src/lib/` — импортируется через псевдоним `$lib/` в любом месте приложения.
 
-## Code Style
+## Стиль кода
 
-- **Tabs** for indentation (not spaces)
-- **Single quotes**, no trailing commas
-- Line width: 100 characters
-- TypeScript strict mode enabled
-- Use Svelte 5 runes (`$state`, `$derived`, `$effect`, `$props`) — not legacy Svelte 4 reactive syntax (`$:`, `export let`)
+- **Пробелы** для отступов
+- **Одинарные кавычки**, без завершающих запятых
+- Ширина строки: 100 символов
+- TypeScript в строгом режиме
+- Использовать Svelte 5 runes (`$state`, `$derived`, `$effect`, `$props`) — не устаревший синтаксис Svelte 4 (`$:`, `export let`)
 
-## Project: Desktop OS Simulation
+## Проект: Симуляция десктопной ОС
 
-`src/routes/+page.svelte` is the desktop. It renders windows, widgets, taskbar, and desktop icons.
+`src/routes/+page.svelte` — рабочий стол. Отрисовывает окна, виджеты, таскбар и иконки рабочего стола.
 
-### Key Stores (`src/lib/stores/`)
+### Динамические карты компонентов (`+page.svelte`)
 
-- **`desktop.svelte.ts`** — windows + desktop icons state. `DesktopIcon` has `type: 'app' | 'url'`, optional `url`. Methods: `openApp`, `openUrl`, `addIcon`, `updateIcon`, `removeIcon`, `closeWindow`, `minimizeWindow`, `toggleMaximize`, `focusWindow`, `moveWindow`, `getZIndex`. `AVAILABLE_APPS` maps app keys to `{ title, icon }`.
-- **`widgets.svelte.ts`** — desktop widgets (clock, calendar, notes, sysmon). BFS spiral collision detection for placement. `widgets.add(type, x, y)`, `widgets.move(id, x, y)`, `widgets.remove(id)`.
-- **`shortcutDialogState.svelte.ts`** — singleton holding `target: DesktopIcon | null` for the shortcut add/edit dialog.
+`<svelte:component>` устарел в режиме Svelte 5 runes. Использовать карты + `{@const Comp = MAP[key]}` + `<Comp />`.
 
-### Dynamic Component Maps (`+page.svelte`)
-
-`<svelte:component>` is deprecated in Svelte 5 runes mode. Use maps + `{@const Comp = MAP[key]}` + `<Comp />`:
-
-```ts
-const APP_COMPONENTS: Record<string, Component> = {
-  explorer: Explorer, notepad: Notepad, ...,
-  'shortcut-dialog': ShortcutDialog, iframe: IframeApp
-}
-const WIDGET_COMPONENTS: Record<string, Component> = {
-  clock: ClockWidget, calendar: CalendarWidget, ...
-}
-```
-
-### Icon Positioning (`+page.svelte`)
-
-- `iconPositions: $state<Record<number, IconPos>>` — stores only explicitly dragged positions.
-- `effectivePositions: $derived.by(...)` — synchronously computes positions for ALL icons. Uses `SvelteSet` for occupied slot tracking. New icons get auto-placed in first free grid slot. **Must use `$derived.by`, not `$effect`** — `$effect` runs after render (causes undefined crash on new icons).
-- `onIconMousedown` reads from `effectivePositions[id]`, not `iconPositions[id]`.
-
-### Window ↔ App Context
-
-`Window.svelte` calls `setContext('windowId', untrack(() => id))`. Apps inside windows call `getContext<number>('windowId')` to get their window ID (used by `ShortcutDialog`, `IframeApp`).
-
-### ShortcutDialog
-
-Rendered inside a `Window` component (registered as `'shortcut-dialog'` in APP_COMPONENTS). Reads `shortcutDialogState.target` for initial values. Uses `getContext('windowId')` to call `desktop.closeWindow()` on save/cancel.
-
-### Widget Drag Pattern
-
-Local `$state` for visual position during drag (`dragX`, `dragY`). Store method (`widgets.move`) called only once on `mouseup`. Template: `left: {dragging ? dragX : x}px`.
-
-### A11y Notes
-
-- Overlay `<div>` elements (in ContextMenu, IconContextMenu) require `<!-- svelte-ignore a11y_click_events_have_key_events -->`.
-- `<button>` cannot be descendant of `<button>`: use `<div role="button" tabindex="0" onkeydown={...}>` for outer containers.
-- `setContext('windowId', untrack(() => id))` — `untrack` suppresses `state_referenced_locally` warning.
+### Заметки по доступности (A11y)
+- `<button>` не может быть потомком `<button>`: использовать `<div role="button" tabindex="0" onkeydown={...}>` для внешних контейнеров.
