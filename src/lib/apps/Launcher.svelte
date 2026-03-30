@@ -5,7 +5,7 @@
   import { desktop } from '$lib/stores/desktop.svelte';
   import { apps } from '$lib/stores/apps.svelte';
   import { widgets } from '$lib/stores/widgets.svelte';
-  import { launcherDrag } from '$lib/stores/launcherDrag.svelte';
+  import { drag } from '$lib/stores/drag.svelte';
   import type { GridItem } from '$lib/stores/desktopGrid.svelte';
   import UiInputSearch from '$lib/components/UiInputSearch.svelte';
   import UiButtonGroup from '$lib/components/UiButtonGroup.svelte';
@@ -13,18 +13,6 @@
   import DesktopGridCell from '$lib/components/DesktopGridCell.svelte';
   import Shortcut from '$lib/components/Shortcut.svelte';
   import Widget from '$lib/components/Widget.svelte';
-  import type { Component } from 'svelte';
-  import ClockWidget from '$lib/widgets/ClockWidget.svelte';
-  import CalendarWidget from '$lib/widgets/CalendarWidget.svelte';
-  import NotesWidget from '$lib/widgets/NotesWidget.svelte';
-  import SysmonWidget from '$lib/widgets/SysmonWidget.svelte';
-
-  const WIDGET_COMPONENTS: Record<string, Component> = {
-    clock: ClockWidget,
-    calendar: CalendarWidget,
-    notes: NotesWidget,
-    sysmon: SysmonWidget
-  };
 
   let { appType = 'apps' }: { appType?: 'apps' | 'widgets' } = $props();
 
@@ -41,7 +29,7 @@
   const WGT_W = 10 * CELL;
   const WGT_H = 11 * CELL;
 
-  // Константы раскладки — приложения (шаг как на рабочем столе: зазор 0 по горизонтали, 1 по вертикали)
+  // Константы раскладки — приложения
   const APP_COL_SPAN = 4,
     APP_COL_STEP = 4;
   const APP_ROW_START = 2,
@@ -54,14 +42,12 @@
     WGT_ROW_SPAN = 9,
     WGT_ROW_STEP = 11;
 
-  // Размер тела лаунчера в пикселях (измеряем через bind)
   let bodyW = $state(0);
   let bodyH = $state(0);
 
   const gridCols = $derived(Math.floor(bodyW / CELL));
   const gridRows = $derived(Math.floor(bodyH / CELL));
 
-  // Сколько элементов помещается в строку / колонку
   const appPerRow = $derived(Math.max(1, Math.floor(gridCols / APP_COL_STEP)));
   const appPerCol = $derived(
     Math.max(1, Math.floor((gridRows - APP_ROW_START - APP_ROW_SPAN + 1) / APP_ROW_STEP) + 1)
@@ -76,7 +62,6 @@
   );
   const wgtPerPage = $derived(wgtPerRow * wgtPerCol);
 
-  // Горизонтальное центрирование: startCol = floor((gridCols - totalWidth) / 2) + 1
   const appColStart = $derived(
     Math.max(1, Math.floor((gridCols - appPerRow * APP_COL_STEP) / 2) + 1)
   );
@@ -99,22 +84,17 @@
   const pageCount = $derived(mode === 'apps' ? appPageCount : wgtPageCount);
 
   let page = $state(0);
-  let direction = $state(1); // 1 = вперёд (справа), -1 = назад (слева)
+  let direction = $state(1);
 
   // Зажим страницы при изменении количества элементов / размера окна
   $effect(() => {
     const max = pageCount - 1;
-    if (page > max)
-      untrack(() => {
-        page = max;
-      });
+    if (page > max) untrack(() => { page = max; });
   });
 
   // Сброс страницы при смене режима или поиска
   $effect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    mode;
-    search;
+    void `${mode}${search}`;
     untrack(() => {
       page = 0;
       direction = 1;
@@ -126,7 +106,6 @@
     page = newPage;
   }
 
-  // Элементы грида для текущей страницы
   const appPageItems = $derived.by<GridItem[]>(() => {
     const start = page * appPerPage;
     return appList.slice(start, start + appPerPage).map((_, i) => ({
@@ -151,36 +130,52 @@
 
   const currentItems = $derived(mode === 'apps' ? appPageItems : wgtPageItems);
 
+  // Карты GridItem.id → элемент для текущей страницы
+  const appItemMap = $derived(
+    new Map(appPageItems.map((gi, i) => [gi.id, appList[page * appPerPage + i]]))
+  );
+  const wgtItemMap = $derived(
+    new Map(wgtPageItems.map((gi, i) => [gi.id, widgetList[page * wgtPerPage + i]]))
+  );
+
   function handleGhostOut(
     item: GridItem,
     mouseOffsetX: number,
     mouseOffsetY: number,
-    clientX: number,
-    clientY: number,
+    _clientX: number,
+    _clientY: number,
     adopt: () => HTMLDivElement | null
   ) {
-    const isWidget = item.id >= 300;
-    const itemId = isWidget ? widgetList[item.id - 300]?.type : appList[item.id - 200]?.id;
+    const isWidget = wgtItemMap.has(item.id);
+    const data = isWidget ? wgtItemMap.get(item.id) : appItemMap.get(item.id);
+    const itemId = isWidget
+      ? (data as { type: string } | undefined)?.type
+      : (data as { id: string } | undefined)?.id;
     if (!itemId) return;
 
-    const ghostW = isWidget ? WGT_W : APP_W;
-    const ghostH = isWidget ? WGT_H : APP_H;
+    const ghostEl = adopt();
+    if (!ghostEl) return;
+
+    ghostEl.style.width = (isWidget ? WGT_W : APP_W) + 'px';
+    ghostEl.style.height = (isWidget ? WGT_H : APP_H) + 'px';
 
     const win = desktop.windows.find((w) => w.id === winId);
 
-    launcherDrag.begin(
-      isWidget ? 'widgets' : 'apps',
-      itemId,
-      adopt(),
-      mouseOffsetX,
-      mouseOffsetY,
-      clientX,
-      clientY,
-      ghostW,
-      ghostH,
-      { appType: mode } as Record<string, unknown>,
-      win?.options ?? {}
-    );
+    drag.begin({
+      id: itemId,
+      data: {
+        type: 'launcher',
+        mode: isWidget ? 'widgets' : 'apps',
+        itemId,
+        reopenArgs: { appType: mode } as Record<string, unknown>,
+        reopenOptions: win?.options ?? {}
+      },
+      ghostEl,
+      mouseOffX: mouseOffsetX,
+      mouseOffY: mouseOffsetY,
+      snappedX: null,
+      snappedY: null
+    });
 
     desktop.closeWindow(winId);
   }
@@ -224,7 +219,7 @@
         >
           {#if mode === 'apps'}
             {#each appPageItems as item (item.id)}
-              {@const app = appList[item.id - 200]}
+              {@const app = appItemMap.get(item.id)}
               {#if app}
                 <DesktopGridCell {item}>
                   <Shortcut
@@ -239,9 +234,9 @@
             {/each}
           {:else}
             {#each wgtPageItems as item (item.id)}
-              {@const w = widgetList[item.id - 300]}
+              {@const w = wgtItemMap.get(item.id)}
               {#if w}
-                {@const WidgetComp = WIDGET_COMPONENTS[w.type]}
+                {@const WidgetComp = widgets.getComponent(w.type)}
                 <DesktopGridCell {item}>
                   <Widget config={{ name: w.type, variant: 'transparent' }}>
                     {#if WidgetComp}<WidgetComp />{/if}
@@ -297,7 +292,6 @@
     inset: 0 16px;
   }
 
-  /* Пагинация */
   .pagination {
     display: flex;
     justify-content: center;

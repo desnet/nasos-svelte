@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { launcherDrag } from '$lib/stores/launcherDrag.svelte';
-  import { dragState } from '$lib/stores/dragState.svelte';
+  import { drag, type DragItem } from '$lib/stores/drag.svelte';
 
   let {
     label,
@@ -19,13 +18,14 @@
     showDot?: boolean;
     dropClass?: string;
     onclick?: (e: MouseEvent) => void;
-    onDrop?: (e: MouseEvent) => void;
+    onDrop?: (items: DragItem[]) => void;
     children: Snippet;
   } = $props();
 
-  function handleMouseup(e: MouseEvent) {
-    if (launcherDrag.active || dragState.active) {
-      onDrop?.(e);
+  function handleMouseup() {
+    if (drag.active) {
+      for (const item of drag.items) drag.consume(item.id);
+      onDrop?.(drag.items);
     }
   }
 </script>

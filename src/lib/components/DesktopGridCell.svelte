@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import type { GridItem } from '$lib/stores/desktopGrid.svelte';
-  import { dragState } from '$lib/stores/dragState.svelte';
+  import { drag } from '$lib/stores/drag.svelte';
   import type { Snippet } from 'svelte';
 
   let { item, children } = $props<{
@@ -86,7 +86,7 @@
       startY: e.clientY,
       valid: true
     };
-    dragState.startResize();
+    drag.startResize();
     window.addEventListener('mousemove', onResizeMove);
     window.addEventListener('mouseup', onResizeUp);
   }
@@ -105,7 +105,7 @@
     if (!resizing) return;
     if (resizing.valid) grid.applyResize(item, resizing.curColSpan, resizing.curRowSpan);
     resizing = null;
-    dragState.endResize();
+    drag.endResize();
     window.removeEventListener('mousemove', onResizeMove);
     window.removeEventListener('mouseup', onResizeUp);
   }

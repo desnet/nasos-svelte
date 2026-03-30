@@ -2,7 +2,7 @@
   // Stores
   import { desktop } from '$lib/stores/desktop.svelte';
   import { wallpaperStore } from '$lib/stores/wallpaper.svelte';
-  import { launcherDrag } from '$lib/stores/launcherDrag.svelte';
+  import { drag } from '$lib/stores/drag.svelte';
   import { apps } from '$lib/stores/apps.svelte';
   import { widgets } from '$lib/stores/widgets.svelte';
   import type { GridItem } from '$lib/stores/desktopGrid.svelte';
@@ -38,8 +38,18 @@
 
   // Обработка дропа из лаунчера на рабочий стол
   $effect(() => {
-    const drop = launcherDrag.pendingDrop;
+    const drop = drag.pendingDrops.find(
+      (d) => (d.item.data as { type?: string })?.type === 'launcher'
+    );
     if (!drop) return;
+
+    const data = drop.item.data as {
+      type: string;
+      mode: 'apps' | 'widgets';
+      itemId: string;
+      reopenArgs: Record<string, unknown>;
+      reopenOptions: Record<string, unknown>;
+    };
 
     const rect = desktopAreaEl?.getBoundingClientRect();
     const gridLeft = rect?.left ?? 0;
@@ -50,8 +60,8 @@
     const row = Math.max(1, Math.floor((drop.clientY - gridTop) / CELL) + 1);
     const id = nextItemId++;
 
-    if (drop.mode === 'apps') {
-      const app = apps.list().find((a) => a.id === drop.itemId);
+    if (data.mode === 'apps') {
+      const app = apps.list().find((a) => a.id === data.itemId);
       if (app) {
         gridItems = [
           ...gridItems,
@@ -66,7 +76,7 @@
         ];
       }
     } else {
-      const widget = widgets.list().find((w) => w.type === drop.itemId);
+      const widget = widgets.list().find((w) => w.type === data.itemId);
       if (widget) {
         gridItems = [
           ...gridItems,
@@ -84,8 +94,8 @@
     }
 
     // Переоткрываем лаунчер
-    desktop.openApp('launcher', drop.reopenArgs, drop.reopenOptions);
-    launcherDrag.clearDrop();
+    desktop.openApp('launcher', data.reopenArgs, data.reopenOptions);
+    drag.clearDrop(drop.item.id);
   });
 
   let gridItems = $state<DesktopItem[]>([
@@ -167,7 +177,6 @@
       cellH={22}
       items={gridItems}
       onItemsChange={(v) => (gridItems = v as DesktopItem[])}
-      onItemRemove={(id) => (gridItems = gridItems.filter((item) => item.id !== id))}
     >
       {#each gridItems as item (item.id)}
         <DesktopGridCell {item}>
@@ -210,7 +219,16 @@
     {/each}
   </div>
 
-  <Taskbar />
+  <Taskbar
+    onDrop={(items) => {
+      for (const item of items) {
+        const data = item.data as { type?: string; gridItem?: { id: number } };
+        if (data?.type === 'grid' && data.gridItem) {
+          gridItems = gridItems.filter((gi) => gi.id !== data.gridItem!.id);
+        }
+      }
+    }}
+  />
 </div>
 
 <style>

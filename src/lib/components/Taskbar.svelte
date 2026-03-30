@@ -2,6 +2,9 @@
   import { desktop, type WindowOptions } from '$lib/stores/desktop.svelte';
   import { taskbar, type Pinned } from '$lib/stores/taskbar.svelte';
   import DockItem from '$lib/components/DockItem.svelte';
+  import type { DragItem } from '$lib/stores/drag.svelte';
+
+  let { onDrop }: { onDrop?: (items: DragItem[]) => void } = $props();
 
   let activeItem = $state<string>('');
   let pinnedList = taskbar.pinnedList();
@@ -66,12 +69,12 @@
         label={pinned.label ?? ''}
         active={activeItem === pinned.id}
         showDot={activeItem === pinned.id}
-        dropClass={pinned.app === 'trash' ? 'trash-drop-zone' : ''}
+        dropClass=""
         onclick={(e) => {
           e.stopPropagation();
           togglePunnedApp(pinned);
         }}
-        onDrop={(el) => console.log(el)}
+        onDrop={(items) => onDrop?.(items)}
       >
         {#if pinned.id == 'launcher-apps'}
           <svg
