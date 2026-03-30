@@ -2,10 +2,10 @@
   // Stores
   import { desktop } from '$lib/stores/desktop.svelte';
   import { wallpaperStore } from '$lib/stores/wallpaper.svelte';
-  import { drag } from '$lib/stores/drag.svelte';
   import { apps } from '$lib/stores/apps.svelte';
   import { widgets } from '$lib/stores/widgets.svelte';
-  import type { GridItem } from '$lib/stores/desktopGrid.svelte';
+  import type { DragItem } from '$lib/stores/drag.svelte';
+  import type { GridItem } from '$lib/components/DesktopGrid.svelte';
   import type { ShortcutConfig } from '$lib/components/Shortcut.svelte';
   import type { WidgetConfig } from '$lib/components/Widget.svelte';
 
@@ -33,70 +33,56 @@
     return 2 + index * (SPAN_H + ROW_GAP);
   }
 
-  let desktopAreaEl = $state<HTMLDivElement | undefined>(undefined);
   let nextItemId = $state(100);
 
-  // Обработка дропа из лаунчера на рабочий стол
-  $effect(() => {
-    const drop = drag.pendingDrops.find(
-      (d) => (d.item.data as { type?: string })?.type === 'launcher'
-    );
-    if (!drop) return;
+  function handleDesktopDrop(items: DragItem[], col: number, row: number) {
+    for (const item of items) {
+      const data = item.data as {
+        type: string;
+        mode: 'apps' | 'widgets';
+        itemId: string;
+        winId: number;
+      };
+      if (data?.type !== 'launcher') continue;
 
-    const data = drop.item.data as {
-      type: string;
-      mode: 'apps' | 'widgets';
-      itemId: string;
-      reopenArgs: Record<string, unknown>;
-      reopenOptions: Record<string, unknown>;
-    };
+      const id = nextItemId++;
 
-    const rect = desktopAreaEl?.getBoundingClientRect();
-    const gridLeft = rect?.left ?? 0;
-    const gridTop = rect?.top ?? 0;
-    const CELL = 22;
-
-    const col = Math.max(1, Math.floor((drop.clientX - gridLeft) / CELL) + 1);
-    const row = Math.max(1, Math.floor((drop.clientY - gridTop) / CELL) + 1);
-    const id = nextItemId++;
-
-    if (data.mode === 'apps') {
-      const app = apps.list().find((a) => a.id === data.itemId);
-      if (app) {
-        gridItems = [
-          ...gridItems,
-          {
-            id,
-            col,
-            row,
-            colSpan: 4,
-            rowSpan: 3,
-            shortcut: { icon: app.icon, label: app.label, app: app.id }
-          }
-        ];
+      if (data.mode === 'apps') {
+        const app = apps.list().find((a) => a.id === data.itemId);
+        if (app) {
+          gridItems = [
+            ...gridItems,
+            {
+              id,
+              col,
+              row,
+              colSpan: 4,
+              rowSpan: 3,
+              shortcut: { icon: app.icon, label: app.label, app: app.id }
+            }
+          ];
+        }
+      } else {
+        const widget = widgets.list().find((w) => w.type === data.itemId);
+        if (widget) {
+          gridItems = [
+            ...gridItems,
+            {
+              id,
+              col,
+              row,
+              colSpan: 10,
+              rowSpan: 11,
+              resizable: true,
+              widget: { name: widget.type, app: widget.type }
+            }
+          ];
+        }
       }
-    } else {
-      const widget = widgets.list().find((w) => w.type === data.itemId);
-      if (widget) {
-        gridItems = [
-          ...gridItems,
-          {
-            id,
-            col,
-            row,
-            colSpan: 10,
-            rowSpan: 11,
-            resizable: true,
-            widget: { name: widget.type, app: widget.type }
-          }
-        ];
-      }
+
+      desktop.restoreWindow(data.winId);
     }
-
-    // Переоткрываем лаунчер
-    desktop.openApp('launcher', data.reopenArgs, data.reopenOptions);
-    drag.clearDrop(drop.item.id);
-  });
+  }
 
   let gridItems = $state<DesktopItem[]>([
     {
@@ -171,12 +157,18 @@
 <div class="desktop" style="background: {wallpaperStore.current.css}">
   <MenuBar />
 
-  <div class="desktop-area" bind:this={desktopAreaEl}>
+  <div class="desktop-area">
     <DesktopGrid
       cellW={22}
       cellH={22}
       items={gridItems}
-      onItemsChange={(v) => (gridItems = v as DesktopItem[])}
+      onMove={(id, col, row) => {
+        gridItems = gridItems.map((i) => (i.id === id ? { ...i, col, row } : i));
+      }}
+      onResize={(id, colSpan, rowSpan) => {
+        gridItems = gridItems.map((i) => (i.id === id ? { ...i, colSpan, rowSpan } : i));
+      }}
+      onDrop={handleDesktopDrop}
     >
       {#each gridItems as item (item.id)}
         <DesktopGridCell {item}>

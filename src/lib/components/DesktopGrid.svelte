@@ -1,24 +1,55 @@
 <script lang="ts">
   import { setContext } from 'svelte';
-  import { desktopGrid, type GridItem } from '$lib/stores/desktopGrid.svelte';
-  import { drag } from '$lib/stores/drag.svelte';
+  import { drag, type DragItem } from '$lib/stores/drag.svelte';
   import type { Snippet } from 'svelte';
+
+  export type GridItem = {
+    id: number;
+    col: number;
+    row: number;
+    colSpan: number;
+    rowSpan: number;
+    color?: string;
+    resizable?: boolean;
+  };
+
+  function isOccupied(
+    items: GridItem[],
+    col: number,
+    row: number,
+    colSpan: number,
+    rowSpan: number,
+    excludeId?: number
+  ): boolean {
+    return items.some((item) => {
+      if (item.id === excludeId) return false;
+      return (
+        col < item.col + item.colSpan &&
+        col + colSpan > item.col &&
+        row < item.row + item.rowSpan &&
+        row + rowSpan > item.row
+      );
+    });
+  }
 
   let {
     cellW = 22,
     cellH = 22,
     items,
-    onItemsChange,
+    onMove,
+    onResize,
+    onDrop,
     onItemDragOut,
     onGhostOut,
     onGhostIn,
-    allowDragOut = false,
     children
   } = $props<{
     cellW?: number;
     cellH?: number;
     items: GridItem[];
-    onItemsChange: (items: GridItem[]) => void;
+    onMove?: (id: number, col: number, row: number) => void;
+    onResize?: (id: number, colSpan: number, rowSpan: number) => void;
+    onDrop?: (items: DragItem[], col: number, row: number) => void;
     onItemDragOut?: (id: number, clientX: number, clientY: number) => void;
     onGhostOut?: (
       item: GridItem,
@@ -29,7 +60,6 @@
       adopt: () => HTMLDivElement | null
     ) => void;
     onGhostIn?: (item: GridItem) => void;
-    allowDragOut?: boolean;
     children: Snippet;
   }>();
 
@@ -52,18 +82,50 @@
 
   let gridDrag = $state<DragState | null>(null);
 
-  // ── External drag (launcher) snap-to-grid ────────────────────────────────────
+  // ── onDrop: внешний элемент приземлился на этот грид ────────────────────────
+  $effect(() => {
+    if (!onDrop) return;
+    const externalDrop = drag.pendingDrops.find(
+      (d) => (d.item.data as { type?: string })?.type !== 'grid'
+    );
+    if (!externalDrop || !containerEl) return;
+
+    const rect = containerEl.getBoundingClientRect();
+    const inside =
+      externalDrop.clientX >= rect.left &&
+      externalDrop.clientX <= rect.right &&
+      externalDrop.clientY >= rect.top &&
+      externalDrop.clientY <= rect.bottom;
+
+    if (!inside) return;
+
+    const col = Math.max(
+      1,
+      Math.min(Math.floor((externalDrop.clientX - rect.left) / cellW) + 1, cols)
+    );
+    const row = Math.max(
+      1,
+      Math.min(Math.floor((externalDrop.clientY - rect.top) / cellH) + 1, rows)
+    );
+
+    onDrop?.([externalDrop.item], col, row);
+    drag.clearDrop(externalDrop.item.id);
+  });
+
+  // ── External drag snap-to-grid ───────────────────────────────────────────────
   let externalDragOver = $state(false);
 
   $effect(() => {
-    const launcherItem = drag.items.find((i) => (i.data as { type?: string })?.type === 'launcher');
-    if (!launcherItem) {
+    const externalItem = drag.items.find(
+      (i) => (i.data as { type?: string })?.type !== 'grid'
+    );
+    if (!externalItem) {
       externalDragOver = false;
       return;
     }
 
     function onExternalMove(e: MouseEvent) {
-      if (!containerEl || !launcherItem) return;
+      if (!containerEl || !externalItem) return;
       const rect = containerEl.getBoundingClientRect();
       const inside =
         e.clientX >= rect.left &&
@@ -77,15 +139,15 @@
 
       const col = Math.max(
         1,
-        Math.min(Math.floor((e.clientX - rect.left - launcherItem.mouseOffX) / cellW) + 1, cols)
+        Math.min(Math.floor((e.clientX - rect.left - externalItem.mouseOffX) / cellW) + 1, cols)
       );
       const row = Math.max(
         1,
-        Math.min(Math.floor((e.clientY - rect.top - launcherItem.mouseOffY) / cellH) + 1, rows)
+        Math.min(Math.floor((e.clientY - rect.top - externalItem.mouseOffY) / cellH) + 1, rows)
       );
       const snappedX = rect.left + (col - 1) * cellW;
       const snappedY = rect.top + (row - 1) * cellH;
-      drag.snapGhost(launcherItem.id, snappedX, snappedY);
+      drag.snapGhost(externalItem.id, snappedX, snappedY);
     }
 
     window.addEventListener('mousemove', onExternalMove);
@@ -156,13 +218,13 @@
   }
 
   function applyResize(item: GridItem, colSpan: number, rowSpan: number) {
-    onItemsChange(desktopGrid.resize(items, item.id, colSpan, rowSpan));
+    onResize?.(item.id, colSpan, rowSpan);
   }
 
   function isResizeValid(item: GridItem, colSpan: number, rowSpan: number): boolean {
     if (item.col + colSpan - 1 > cols) return false;
     if (item.row + rowSpan - 1 > rows) return false;
-    return !desktopGrid.isOccupied(items, item.col, item.row, colSpan, rowSpan, item.id);
+    return !isOccupied(items, item.col, item.row, colSpan, rowSpan, item.id);
   }
 
   setContext('desktopGrid', {
@@ -201,19 +263,19 @@
       e.clientY >= rect.top &&
       e.clientY <= rect.bottom;
 
-    if (!isInside && allowDragOut) {
+    if (!isInside && onGhostOut) {
       // Сигнал только при первом выходе за границу
       if (gridDrag.ghostCol !== -1) {
         const { item, mouseOffsetX, mouseOffsetY } = gridDrag;
         gridDrag = { ...gridDrag, ghostCol: -1, valid: false };
-        onGhostOut?.(item, mouseOffsetX, mouseOffsetY, e.clientX, e.clientY, adoptGhost);
-      }
-      // Ghost свободно следует за курсором (drag.store.onWindowMove → moveGhost)
-      if (dragItem?.ghostEl) {
-        dragItem.ghostEl.style.transition = '';
-        dragItem.ghostEl.style.outline = '2px dashed rgba(255,255,255,0.6)';
-        dragItem.ghostEl.style.opacity = '0.6';
-        dragItem.ghostEl.style.filter = '';
+        // Применяем стили до adoptGhost — после него ghostEl будет null
+        if (dragItem?.ghostEl) {
+          dragItem.ghostEl.style.transition = '';
+          dragItem.ghostEl.style.outline = '2px dashed rgba(255,255,255,0.6)';
+          dragItem.ghostEl.style.opacity = '0.6';
+          dragItem.ghostEl.style.filter = '';
+        }
+        onGhostOut(item, mouseOffsetX, mouseOffsetY, e.clientX, e.clientY, adoptGhost);
       }
       return;
     }
@@ -231,7 +293,7 @@
       1,
       Math.min(Math.floor(cellTop / cellH) + 1, rows - gridDrag.item.rowSpan + 1)
     );
-    const valid = !desktopGrid.isOccupied(
+    const valid = !isOccupied(
       items,
       ghostCol,
       ghostRow,
@@ -259,9 +321,7 @@
     if (gridDrag.ghostCol === -1) {
       onItemDragOut?.(gridDrag.item.id, e.clientX, e.clientY);
     } else if (gridDrag.valid) {
-      onItemsChange(
-        desktopGrid.move(items, gridDrag.item.id, gridDrag.ghostCol, gridDrag.ghostRow)
-      );
+      onMove?.(gridDrag.item.id, gridDrag.ghostCol, gridDrag.ghostRow);
     }
     // Ghost удаляется автоматически через drag.end() в onWindowUp
     gridDrag = null;

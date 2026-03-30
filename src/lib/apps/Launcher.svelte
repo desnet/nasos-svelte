@@ -6,7 +6,7 @@
   import { apps } from '$lib/stores/apps.svelte';
   import { widgets } from '$lib/stores/widgets.svelte';
   import { drag } from '$lib/stores/drag.svelte';
-  import type { GridItem } from '$lib/stores/desktopGrid.svelte';
+  import type { GridItem } from '$lib/components/DesktopGrid.svelte';
   import UiInputSearch from '$lib/components/UiInputSearch.svelte';
   import UiButtonGroup from '$lib/components/UiButtonGroup.svelte';
   import DesktopGrid from '$lib/components/DesktopGrid.svelte';
@@ -159,16 +159,13 @@
     ghostEl.style.width = (isWidget ? WGT_W : APP_W) + 'px';
     ghostEl.style.height = (isWidget ? WGT_H : APP_H) + 'px';
 
-    const win = desktop.windows.find((w) => w.id === winId);
-
     drag.begin({
       id: itemId,
       data: {
         type: 'launcher',
         mode: isWidget ? 'widgets' : 'apps',
         itemId,
-        reopenArgs: { appType: mode } as Record<string, unknown>,
-        reopenOptions: win?.options ?? {}
+        winId
       },
       ghostEl,
       mouseOffX: mouseOffsetX,
@@ -177,7 +174,7 @@
       snappedY: null
     });
 
-    desktop.closeWindow(winId);
+    desktop.minimizeWindow(winId);
   }
 </script>
 
@@ -213,8 +210,6 @@
           cellW={22}
           cellH={22}
           items={currentItems}
-          onItemsChange={() => {}}
-          allowDragOut
           onGhostOut={handleGhostOut}
         >
           {#if mode === 'apps'}
