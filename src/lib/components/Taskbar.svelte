@@ -4,7 +4,7 @@
   import DockItem from '$lib/components/DockItem.svelte';
   import type { DragItem } from '$lib/stores/drag.svelte';
 
-  let { onDrop }: { onDrop?: (items: DragItem[]) => void } = $props();
+  let { onDrop }: { onDrop?: (items: DragItem[], id: string | undefined) => void } = $props();
 
   let activeItem = $state<string>('');
   let pinnedList = taskbar.pinnedList();
@@ -66,15 +66,15 @@
 
     {#each pinnedList as pinned (pinned.id)}
       <DockItem
+        id={pinned.id}
         label={pinned.label ?? ''}
         active={activeItem === pinned.id}
         showDot={activeItem === pinned.id}
-        dropClass=""
         onclick={(e) => {
           e.stopPropagation();
           togglePunnedApp(pinned);
         }}
-        onDrop={(items) => onDrop?.(items)}
+        onDrop={(items, id) => onDrop?.(items, id)}
       >
         {#if pinned.id == 'launcher-apps'}
           <svg

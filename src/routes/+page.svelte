@@ -212,7 +212,8 @@
   </div>
 
   <Taskbar
-    onDrop={(items) => {
+    onDrop={(items, id) => {
+      if (id !== 'trash') return;
       for (const item of items) {
         const data = item.data as { type?: string; gridItem?: { id: number } };
         if (data?.type === 'grid' && data.gridItem) {

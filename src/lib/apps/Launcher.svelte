@@ -287,6 +287,12 @@
     inset: 0 16px;
   }
 
+  /* Виджеты внутри лаунчера уже внутри размытого окна — свой backdrop-filter не нужен */
+  .launcher-page :global(.widget.transparent) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
   .pagination {
     display: flex;
     justify-content: center;

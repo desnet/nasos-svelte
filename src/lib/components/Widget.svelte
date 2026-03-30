@@ -46,9 +46,9 @@
   }
 
   .widget.transparent {
-    background: rgba(255, 255, 255, 0.01);
+    background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.22);
-    border-radius: 20px;
+    border-radius: 10px;
     box-shadow: none;
     backdrop-filter: blur(12px);
   }

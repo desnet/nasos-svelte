@@ -3,35 +3,35 @@
   import { drag, type DragItem } from '$lib/stores/drag.svelte';
 
   let {
+    id,
     label,
     active = false,
     minimized = false,
     showDot = false,
-    dropClass = '',
     onclick,
     onDrop,
     children
   }: {
+    id?: string;
     label: string;
     active?: boolean;
     minimized?: boolean;
     showDot?: boolean;
-    dropClass?: string;
     onclick?: (e: MouseEvent) => void;
-    onDrop?: (items: DragItem[]) => void;
+    onDrop?: (items: DragItem[], id: string | undefined) => void;
     children: Snippet;
   } = $props();
 
   function handleMouseup() {
     if (drag.active) {
       for (const item of drag.items) drag.consume(item.id);
-      onDrop?.(drag.items);
+      onDrop?.(drag.items, id);
     }
   }
 </script>
 
 <button
-  class="dock-item {dropClass}"
+  class="dock-item"
   class:dock-active={active}
   class:dock-minimized={minimized}
   {onclick}
