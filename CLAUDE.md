@@ -39,4 +39,5 @@ npm run format       # Форматирование кода через Prettier
 `<svelte:component>` устарел в режиме Svelte 5 runes. Использовать карты + `{@const Comp = MAP[key]}` + `<Comp />`.
 
 ### Заметки по доступности (A11y)
+
 - `<button>` не может быть потомком `<button>`: использовать `<div role="button" tabindex="0" onkeydown={...}>` для внешних контейнеров.
