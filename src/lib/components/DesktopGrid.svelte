@@ -246,6 +246,13 @@
     }
   });
 
+  // Сброс gridDrag если элемент был consume-ован (onUp не вызывается)
+  $effect(() => {
+    if (gridDrag && !drag.items.find((i) => i.id === gridDrag!.item.id)) {
+      gridDrag = null;
+    }
+  });
+
   $effect(() => {
     if (gridDrag) document.body.style.cursor = 'move';
     else if (drag.resizing) document.body.style.cursor = 'se-resize';
