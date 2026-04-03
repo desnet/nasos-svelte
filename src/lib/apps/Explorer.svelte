@@ -1,5 +1,9 @@
 <script lang="ts">
+  import { getContext } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
+  import type { WindowContext } from '$lib/components/Window.svelte';
+
+  getContext<WindowContext>('window').setSize(680, 460);
 
   type FileItem = {
     name: string;

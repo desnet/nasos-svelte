@@ -48,17 +48,15 @@ function createDesktop() {
 
     const appMeta = apps.list().find((a) => a.id === app);
     const id = nextId++;
-    const width: number | string =
-      options?.width ??
-      (app === 'explorer' ? 680 : app === 'appstore' ? 780 : app === 'wallpapers' ? 720 : 500);
-    const height: number | string =
-      options?.height ??
-      (app === 'explorer' ? 460 : app === 'appstore' ? 520 : app === 'wallpapers' ? 480 : 380);
+    const width: number | string = options?.width ?? 500;
+    const height: number | string = options?.height ?? 380;
 
     const pos = options?.position ?? 'auto';
-    const offset = (windows.filter((w) => !w.minimized).length % 6) * 24;
-    let x = 80 + offset;
-    let y = 60 + offset;
+    const offset = (windows.filter((w) => !w.minimized).length % 8) * 28;
+    const baseX = Math.round(window.innerWidth * 0.5 - 320 - (8 * 28) / 2);
+    const baseY = Math.round(window.innerHeight * 0.5 - 260 - (8 * 28) / 2);
+    let x = baseX + offset;
+    let y = baseY + offset;
     let isCentered = false;
 
     if (pos === 'center') {

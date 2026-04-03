@@ -7,6 +7,7 @@
   import { widgets } from '$lib/stores/widgets.svelte';
   import { drag } from '$lib/stores/drag.svelte';
   import type { GridItem } from '$lib/components/Grid.svelte';
+  import type { WindowContext } from '$lib/components/Window.svelte';
   import UiInputSearch from '$lib/components/UiInputSearch.svelte';
   import UiButtonGroup from '$lib/components/UiButtonGroup.svelte';
   import Grid from '$lib/components/Grid.svelte';
@@ -16,7 +17,7 @@
 
   let { appType = 'apps' }: { appType?: 'apps' | 'widgets' } = $props();
 
-  const winId = getContext<number>('windowId');
+  const { id: winId } = getContext<WindowContext>('window');
 
   let mode = $state<'apps' | 'widgets'>(untrack(() => appType));
   let search = $state('');

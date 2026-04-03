@@ -1,13 +1,21 @@
 <script lang="ts">
-  import { setContext, untrack } from 'svelte';
+  import { setContext } from 'svelte';
   import type { Snippet } from 'svelte';
   import { desktop } from '$lib/stores/desktop.svelte';
 
+  export type WindowContext = {
+    id: number;
+    setSize: (width: number, height: number) => void;
+  };
+
   let { id, children } = $props<{ id: number; children: Snippet }>();
-  setContext(
-    'windowId',
-    untrack(() => id)
-  );
+
+  setContext<WindowContext>('window', {
+    get id() { return id; },
+    setSize(width, height) {
+      desktop.resizeWindow(id, width, height);
+    }
+  });
 
   const win = $derived(desktop.windows.find((w) => w.id === id)!);
   const zIndex = $derived(desktop.getZIndex(id));

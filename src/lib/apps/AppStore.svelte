@@ -1,6 +1,10 @@
 <script lang="ts">
+  import { getContext } from 'svelte';
   import { appStore, type AppCategory, type StoreApp } from '$lib/stores/appstore.svelte';
   import UiInputSearch from '$lib/components/UiInputSearch.svelte';
+  import type { WindowContext } from '$lib/components/Window.svelte';
+
+  getContext<WindowContext>('window').setSize(780, 520);
 
   const CATEGORIES: AppCategory[] = [
     'Все',

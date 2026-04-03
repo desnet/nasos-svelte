@@ -1,6 +1,10 @@
 <script lang="ts">
+  import { getContext } from 'svelte';
   import { wallpaperStore, WALLPAPERS, type Wallpaper } from '$lib/stores/wallpaper.svelte';
   import UiButtonGroup from '$lib/components/UiButtonGroup.svelte';
+  import type { WindowContext } from '$lib/components/Window.svelte';
+
+  getContext<WindowContext>('window').setSize(720, 480);
 
   const categories = ['Все', ...new Set(WALLPAPERS.map((w) => w.category))];
 
