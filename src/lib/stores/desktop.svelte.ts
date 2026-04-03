@@ -1,3 +1,5 @@
+import { apps } from '$lib/stores/apps.svelte';
+
 export type WindowOptions = {
   titlebar?: boolean; // показывать titlebar (по умолчанию true)
   resizable?: boolean; // разрешить изменение размера (по умолчанию true)
@@ -25,8 +27,6 @@ export type WindowApp = {
   componentArgs?: Record<string, unknown>;
   options?: WindowOptions;
 };
-
-import { apps } from '$lib/stores/apps.svelte';
 
 function createDesktop() {
   let windows = $state<WindowApp[]>([]);
