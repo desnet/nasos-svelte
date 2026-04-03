@@ -5,19 +5,19 @@
   import { apps } from '$lib/stores/apps.svelte';
   import { widgets } from '$lib/stores/widgets.svelte';
   import type { DragItem } from '$lib/stores/drag.svelte';
-  import type { GridItem } from '$lib/components/DesktopGrid.svelte';
+  import type { GridItem } from '$lib/components/Grid.svelte';
   import type { ShortcutConfig } from '$lib/components/Shortcut.svelte';
   import type { WidgetConfig } from '$lib/components/Widget.svelte';
 
   // Grid components
-  import DesktopGridCell from '$lib/components/DesktopGridCell.svelte';
+  import GridCell from '$lib/components/GridCell.svelte';
   import Shortcut from '$lib/components/Shortcut.svelte';
   import Widget from '$lib/components/Widget.svelte';
 
   // Layout components
   import MenuBar from '$lib/components/MenuBar.svelte';
-  import DesktopGrid from '$lib/components/DesktopGrid.svelte';
-  import Taskbar from '$lib/components/Taskbar.svelte';
+  import Grid from '$lib/components/Grid.svelte';
+  import Dock from '$lib/components/Dock.svelte';
 
   // Window infrastructure
   import Window from '$lib/components/Window.svelte';
@@ -158,7 +158,7 @@
   <MenuBar />
 
   <div class="desktop-area">
-    <DesktopGrid
+    <Grid
       cellW={22}
       cellH={22}
       items={gridItems}
@@ -171,7 +171,7 @@
       onDrop={handleDesktopDrop}
     >
       {#each gridItems as item (item.id)}
-        <DesktopGridCell {item}>
+        <GridCell {item}>
           {#if item.shortcut}
             <Shortcut
               config={item.shortcut}
@@ -186,9 +186,9 @@
               {#if WidgetSomp}<WidgetSomp />{/if}
             </Widget>
           {/if}
-        </DesktopGridCell>
+        </GridCell>
       {/each}
-    </DesktopGrid>
+    </Grid>
 
     <!-- Desktop overlay backdrop (для окон с options.overlay) -->
     {#if desktop.windows.some((w) => w.options?.overlay && !w.minimized)}
@@ -211,7 +211,7 @@
     {/each}
   </div>
 
-  <Taskbar
+  <Dock
     onDrop={(items, id) => {
       if (id !== 'trash') return;
       for (const item of items) {

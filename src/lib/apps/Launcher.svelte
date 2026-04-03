@@ -6,11 +6,11 @@
   import { apps } from '$lib/stores/apps.svelte';
   import { widgets } from '$lib/stores/widgets.svelte';
   import { drag } from '$lib/stores/drag.svelte';
-  import type { GridItem } from '$lib/components/DesktopGrid.svelte';
+  import type { GridItem } from '$lib/components/Grid.svelte';
   import UiInputSearch from '$lib/components/UiInputSearch.svelte';
   import UiButtonGroup from '$lib/components/UiButtonGroup.svelte';
-  import DesktopGrid from '$lib/components/DesktopGrid.svelte';
-  import DesktopGridCell from '$lib/components/DesktopGridCell.svelte';
+  import Grid from '$lib/components/Grid.svelte';
+  import GridCell from '$lib/components/GridCell.svelte';
   import Shortcut from '$lib/components/Shortcut.svelte';
   import Widget from '$lib/components/Widget.svelte';
 
@@ -206,7 +206,7 @@
         in:fly={{ x: direction * bodyW, duration: 260, easing: cubicOut }}
         out:fly={{ x: -direction * bodyW, duration: 260, easing: cubicOut }}
       >
-        <DesktopGrid
+        <Grid
           cellW={22}
           cellH={22}
           items={currentItems}
@@ -216,7 +216,7 @@
             {#each appPageItems as item (item.id)}
               {@const app = appItemMap.get(item.id)}
               {#if app}
-                <DesktopGridCell {item}>
+                <GridCell {item}>
                   <Shortcut
                     config={{ icon: app.icon, label: app.label, app: app.id }}
                     ondblclick={() => {
@@ -224,7 +224,7 @@
                       desktop.closeWindow(winId);
                     }}
                   />
-                </DesktopGridCell>
+                </GridCell>
               {/if}
             {/each}
           {:else}
@@ -232,15 +232,15 @@
               {@const w = wgtItemMap.get(item.id)}
               {#if w}
                 {@const WidgetComp = widgets.getComponent(w.type)}
-                <DesktopGridCell {item}>
+                <GridCell {item}>
                   <Widget config={{ name: w.type, variant: 'transparent' }}>
                     {#if WidgetComp}<WidgetComp />{/if}
                   </Widget>
-                </DesktopGridCell>
+                </GridCell>
               {/if}
             {/each}
           {/if}
-        </DesktopGrid>
+        </Grid>
       </div>
     {/key}
   </div>

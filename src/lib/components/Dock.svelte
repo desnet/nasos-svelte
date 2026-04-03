@@ -1,6 +1,6 @@
 <script lang="ts">
   import { desktop, type WindowOptions } from '$lib/stores/desktop.svelte';
-  import { taskbar, type Pinned } from '$lib/stores/taskbar.svelte';
+  import { taskbar, type Pinned } from '$lib/stores/dock.svelte';
   import DockItem from '$lib/components/DockItem.svelte';
   import type { DragItem } from '$lib/stores/drag.svelte';
 
