@@ -2,6 +2,7 @@
   import { getContext } from 'svelte';
   import { appStore, type AppCategory, type StoreApp } from '$lib/stores/appstore.svelte';
   import UiInputSearch from '$lib/components/UiInputSearch.svelte';
+  import UiButton from '$lib/components/UiButton.svelte';
   import type { WindowContext } from '$lib/components/Window.svelte';
 
   getContext<WindowContext>('window').setSize(780, 520);
@@ -94,9 +95,7 @@
                 Удалить
               </button>
             {:else}
-              <button class="btn-install" onclick={() => appStore.install(detail!.id)}>
-                Установить
-              </button>
+              <UiButton onclick={() => appStore.install(detail!.id)}>Установить</UiButton>
             {/if}
           </div>
         </div>
@@ -169,15 +168,13 @@
                   {:else if app.installed}
                     <span class="installed-badge">✓ Установлено</span>
                   {:else}
-                    <button
-                      class="btn-install small"
+                    <UiButton
+                      size="sm"
                       onclick={(e) => {
                         e.stopPropagation();
                         appStore.install(app.id);
                       }}
-                    >
-                      Установить
-                    </button>
+                    >Установить</UiButton>
                   {/if}
                 </div>
               </div>
@@ -423,28 +420,7 @@
     justify-content: flex-end;
   }
 
-  /* Buttons */
-  .btn-install {
-    padding: 6px 14px;
-    background: #4a90d9;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-    font-family: inherit;
-  }
-  .btn-install:hover {
-    background: #357abd;
-  }
-  .btn-install.small {
-    padding: 4px 10px;
-    font-size: 11px;
-  }
-
-  .btn-uninstall {
+.btn-uninstall {
     padding: 6px 14px;
     background: #f0f0f0;
     color: #c03030;

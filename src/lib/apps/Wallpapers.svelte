@@ -2,6 +2,7 @@
   import { getContext } from 'svelte';
   import { wallpaperStore, WALLPAPERS, type Wallpaper } from '$lib/stores/wallpaper.svelte';
   import UiButtonGroup from '$lib/components/UiButtonGroup.svelte';
+  import UiButton from '$lib/components/UiButton.svelte';
   import type { WindowContext } from '$lib/components/Window.svelte';
 
   getContext<WindowContext>('window').setSize(720, 480);
@@ -47,8 +48,8 @@
     </div>
     <div class="preview-actions">
       {#if preview && preview.id !== wallpaperStore.current.id}
-        <button class="btn-apply" onclick={() => apply(preview!)}> ✓ Применить </button>
-        <button class="btn-cancel" onclick={() => (preview = null)}> Отмена </button>
+        <UiButton onclick={() => apply(preview!)}>✓ Применить</UiButton>
+        <UiButton variant="secondary" onclick={() => (preview = null)}>Отмена</UiButton>
       {:else}
         <span class="applied-badge">✓ Установлено</span>
       {/if}
@@ -182,34 +183,7 @@
     align-items: center;
   }
 
-  .btn-apply {
-    padding: 7px 16px;
-    background: #4a90d9;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-  }
-  .btn-apply:hover {
-    background: #357abd;
-  }
-
-  .btn-cancel {
-    padding: 7px 12px;
-    background: #f0f0f0;
-    color: #555;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-  }
-  .btn-cancel:hover {
-    background: #e4e4e4;
-  }
-
-  .applied-badge {
+.applied-badge {
     font-size: 12px;
     color: #4a90d9;
     font-weight: 600;

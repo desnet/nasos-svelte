@@ -1,4 +1,6 @@
 <script lang="ts">
+  import UiButton from '$lib/components/UiButton.svelte';
+
   let items = $state([
     { name: 'old_report.docx', icon: '📄', deleted: '20.03.2026' },
     { name: 'temp_file.tmp', icon: '📄', deleted: '22.03.2026' },
@@ -16,7 +18,7 @@
 
 <div class="trash">
   <div class="toolbar">
-    <button onclick={clear} disabled={items.length === 0}>🗑️ Очистить корзину</button>
+    <UiButton variant="danger" size="sm" disabled={items.length === 0} onclick={clear}>🗑️ Очистить корзину</UiButton>
     <span class="count">{items.length} объект(ов)</span>
   </div>
 
@@ -32,7 +34,7 @@
           <span class="icon">{item.icon}</span>
           <span class="name">{item.name}</span>
           <span class="date">{item.deleted}</span>
-          <button class="restore-btn" onclick={() => restore(item.name)}>↩ Восстановить</button>
+          <UiButton variant="secondary" size="sm" onclick={() => restore(item.name)}>↩ Восстановить</UiButton>
         </div>
       {/each}
     </div>
@@ -56,21 +58,6 @@
     border-bottom: 1px solid #ddd;
   }
 
-  .toolbar button {
-    padding: 3px 10px;
-    border: 1px solid #bbb;
-    border-radius: 3px;
-    background: white;
-    cursor: pointer;
-    font-size: 12px;
-  }
-  .toolbar button:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
-  .toolbar button:hover:not(:disabled) {
-    background: #ffe0e0;
-  }
 
   .count {
     font-size: 11px;
@@ -121,15 +108,4 @@
     font-size: 11px;
   }
 
-  .restore-btn {
-    padding: 2px 8px;
-    border: 1px solid #bbb;
-    border-radius: 3px;
-    background: white;
-    cursor: pointer;
-    font-size: 11px;
-  }
-  .restore-btn:hover {
-    background: #e0f0e0;
-  }
 </style>

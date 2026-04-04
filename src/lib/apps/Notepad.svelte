@@ -1,4 +1,6 @@
 <script lang="ts">
+  import UiButton from '$lib/components/UiButton.svelte';
+
   let text = $state('Введите текст...\n\nДобро пожаловать в Блокнот!');
   let saved = $state(true);
 
@@ -13,7 +15,7 @@
 
 <div class="notepad">
   <div class="toolbar">
-    <button onclick={save} disabled={saved}>💾 Сохранить</button>
+    <UiButton variant="secondary" size="sm" disabled={saved} onclick={save}>💾 Сохранить</UiButton>
     <span class="status">{saved ? '✓ Сохранено' : '● Не сохранено'}</span>
   </div>
   <textarea
@@ -40,23 +42,7 @@
     border-bottom: 1px solid #ddd;
   }
 
-  .toolbar button {
-    padding: 2px 10px;
-    border: 1px solid #bbb;
-    border-radius: 3px;
-    background: white;
-    cursor: pointer;
-    font-size: 12px;
-  }
-  .toolbar button:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-  .toolbar button:hover:not(:disabled) {
-    background: #e0e8f8;
-  }
-
-  .status {
+.status {
     font-size: 11px;
     color: #666;
   }
