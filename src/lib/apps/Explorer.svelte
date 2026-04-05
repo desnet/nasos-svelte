@@ -206,9 +206,9 @@
     selectedItem = item.name
   }
 
-  function handleItemDblclick(item: FileItem, basePathKey: string) {
+  function handleItemDblclick(item: FileItem) {
     if (item.type === 'folder') {
-      navigateTo(item, [...selectedKey!.split('/'), item.name])
+      navigateTo(item, [...path, item.name])
     }
   }
 
@@ -285,7 +285,7 @@
                   class="file-item"
                   class:selected={selectedItem === item.name}
                   onclick={() => handleItemClick(item)}
-                  ondblclick={() => handleItemDblclick(item, selectedKey ?? '')}
+                  ondblclick={() => handleItemDblclick(item)}
                 >
                   <span class="file-icon">{item.icon}</span>
                   <span class="file-name">{item.name}</span>
@@ -306,7 +306,7 @@
                     class="list-item"
                     class:selected={selectedItem === item.name}
                     onclick={() => handleItemClick(item)}
-                    ondblclick={() => handleItemDblclick(item, selectedKey ?? '')}
+                    ondblclick={() => handleItemDblclick(item)}
                   >
                     <span class="col-name">
                       <span class="list-icon">{item.icon}</span>
