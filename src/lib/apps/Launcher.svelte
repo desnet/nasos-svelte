@@ -6,12 +6,12 @@
   import { apps } from '$lib/stores/apps.svelte';
   import { widgets } from '$lib/stores/widgets.svelte';
   import { drag } from '$lib/stores/drag.svelte';
-  import type { GridItem } from '$lib/components/Grid.svelte';
+  import type { GridItem } from '$lib/components/UiGrid.svelte';
   import type { WindowContext } from '$lib/components/Window.svelte';
   import UiInputSearch from '$lib/components/UiInputSearch.svelte';
   import UiButtonGroup from '$lib/components/UiButtonGroup.svelte';
-  import Grid from '$lib/components/Grid.svelte';
-  import GridCell from '$lib/components/GridCell.svelte';
+  import UiGrid from '$lib/components/UiGrid.svelte';
+  import UiGridCell from '$lib/components/UiGridCell.svelte';
   import Shortcut from '$lib/components/Shortcut.svelte';
   import Widget from '$lib/components/Widget.svelte';
 
@@ -207,7 +207,7 @@
         in:fly={{ x: direction * bodyW, duration: 260, easing: cubicOut }}
         out:fly={{ x: -direction * bodyW, duration: 260, easing: cubicOut }}
       >
-        <Grid
+        <UiGrid
           cellW={22}
           cellH={22}
           items={currentItems}
@@ -217,7 +217,7 @@
             {#each appPageItems as item (item.id)}
               {@const app = appItemMap.get(item.id)}
               {#if app}
-                <GridCell {item}>
+                <UiGridCell {item}>
                   <Shortcut
                     config={{ icon: app.icon, label: app.label, app: app.id }}
                     ondblclick={() => {
@@ -225,7 +225,7 @@
                       desktop.closeWindow(winId);
                     }}
                   />
-                </GridCell>
+                </UiGridCell>
               {/if}
             {/each}
           {:else}
@@ -233,15 +233,15 @@
               {@const w = wgtItemMap.get(item.id)}
               {#if w}
                 {@const WidgetComp = widgets.getComponent(w.type)}
-                <GridCell {item}>
+                <UiGridCell {item}>
                   <Widget config={{ name: w.type, variant: 'transparent' }}>
                     {#if WidgetComp}<WidgetComp />{/if}
                   </Widget>
-                </GridCell>
+                </UiGridCell>
               {/if}
             {/each}
           {/if}
-        </Grid>
+        </UiGrid>
       </div>
     {/key}
   </div>

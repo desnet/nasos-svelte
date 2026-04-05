@@ -3,6 +3,10 @@
   import { appStore, type AppCategory, type StoreApp } from '$lib/stores/appstore.svelte';
   import UiInputSearch from '$lib/components/UiInputSearch.svelte';
   import UiButton from '$lib/components/UiButton.svelte';
+  import UiMenu from '$lib/components/UiMenu.svelte';
+  import type { MenuItem } from '$lib/components/UiMenu.js';
+  import UiPanels from '$lib/components/UiPanels.svelte';
+  import UiSidebar from '$lib/components/UiSidebar.svelte';
   import type { WindowContext } from '$lib/components/Window.svelte';
 
   getContext<WindowContext>('window').setSize(780, 520);
@@ -15,6 +19,8 @@
     'Медиа',
     'Разработка'
   ];
+
+  const navItems: MenuItem[] = CATEGORIES.map((cat) => ({ key: cat, label: cat }));
 
   let category = $state<AppCategory>('Все');
   let search = $state('');
@@ -38,34 +44,34 @@
 </script>
 
 <div class="store">
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="store-logo">
-      <span>🏪</span>
-      <span>NasStore</span>
-    </div>
-    <UiInputSearch bind:value={search} />
-    <nav class="nav">
-      {#each CATEGORIES as cat (cat)}
-        <button
-          class="nav-item"
-          class:active={category === cat}
-          onclick={() => {
-            category = cat;
+  <UiPanels leftWidth={190}>
+    {#snippet left()}
+      <UiSidebar>
+        {#snippet header()}
+          <div class="sidebar-search">
+            <UiInputSearch bind:value={search} />
+          </div>
+        {/snippet}
+
+        <UiMenu
+          items={navItems}
+          value={category}
+          onselect={(key) => {
+            category = key as AppCategory;
             detail = null;
           }}
-        >
-          {cat}
-        </button>
-      {/each}
-    </nav>
-    <div class="installed-count">
-      Установлено: {appStore.apps.filter((a) => a.installed).length} / {appStore.apps.length}
-    </div>
-  </aside>
+        />
 
-  <!-- Main -->
-  <main class="main">
+        {#snippet footer()}
+          <div class="installed-count">
+            Установлено: {appStore.apps.filter((a) => a.installed).length} / {appStore.apps.length}
+          </div>
+        {/snippet}
+      </UiSidebar>
+    {/snippet}
+
+    {#snippet main()}
+      <div class="main">
     {#if detail}
       <!-- Детальная страница приложения -->
       <div class="detail">
@@ -183,86 +189,27 @@
         {/if}
       </section>
     {/if}
-  </main>
+      </div>
+    {/snippet}
+  </UiPanels>
 </div>
 
 <style>
   .store {
-    display: flex;
     height: 100%;
     font-size: 13px;
     background: #f5f6fa;
   }
 
   /* Sidebar */
-  .sidebar {
-    width: 180px;
-    flex-shrink: 0;
-    border-right: 1px solid #dde0ea;
-    background: #fff;
-    display: flex;
-    flex-direction: column;
-    padding: 16px 10px;
-    gap: 6px;
-  }
-
-  .store-logo {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 4px 12px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #222;
-    border-bottom: 1px solid #dde0ea;
-    margin-bottom: 4px;
-  }
-  .store-logo span:first-child {
-    font-size: 20px;
-  }
-
-  .nav {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .nav-item {
-    padding: 6px 12px;
-    border-radius: 20px;
-    border: 1px solid transparent;
-    background: white;
-    color: #555;
-    font-size: 12px;
-    cursor: pointer;
-    text-align: left;
-    font-family: inherit;
-    transition:
-      border-color 0.12s,
-      color 0.12s,
-      background 0.12s;
-  }
-  .nav-item:hover {
-    border-color: #4a90d9;
-    color: #4a90d9;
-  }
-  .nav-item.active {
-    background: #4a90d9;
-    border-color: #4a90d9;
-    color: white;
-    font-weight: 600;
-  }
-
   .installed-count {
-    margin-top: auto;
     font-size: 11px;
     color: #bbb;
-    padding: 0 4px;
   }
 
   /* Main */
   .main {
-    flex: 1;
+    height: 100%;
     min-width: 0;
     overflow-y: auto;
     overflow-x: hidden;

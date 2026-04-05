@@ -53,10 +53,14 @@ function createDesktop() {
 
     const pos = options?.position ?? 'auto';
     const offset = (windows.filter((w) => !w.minimized).length % 8) * 28;
-    const baseX = Math.round(window.innerWidth * 0.5 - 320 - (8 * 28) / 2);
-    const baseY = Math.round(window.innerHeight * 0.5 - 260 - (8 * 28) / 2);
-    let x = baseX + offset;
-    let y = baseY + offset;
+    const numW = typeof width === 'number' ? width : 500;
+    const numH = typeof height === 'number' ? height : 380;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const baseX = Math.round(vw * 0.5 - numW * 0.5 - (8 * 28) / 2);
+    const baseY = Math.round(vh * 0.5 - numH * 0.5 - (8 * 28) / 2);
+    let x = Math.max(0, Math.min(baseX + offset, vw - numW));
+    let y = Math.max(0, Math.min(baseY + offset, vh - numH));
     let isCentered = false;
 
     if (pos === 'center') {
@@ -117,7 +121,15 @@ function createDesktop() {
   }
 
   function resizeWindow(id: number, width: number, height: number) {
-    windows = windows.map((w) => (w.id === id ? { ...w, width, height } : w));
+    windows = windows.map((w) => {
+      if (w.id !== id) return w;
+      if (w.isCentered) return { ...w, width, height };
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const x = Math.max(0, Math.min(w.x, vw - (typeof width === 'number' ? width : w.x)));
+      const y = Math.max(0, Math.min(w.y, vh - (typeof height === 'number' ? height : w.y)));
+      return { ...w, width, height, x, y };
+    });
   }
 
   function getZIndex(id: number) {

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext } from 'svelte';
-  import type { GridItem } from '$lib/components/Grid.svelte';
+  import type { GridItem } from '$lib/components/UiGrid.svelte';
   import { drag } from '$lib/stores/drag.svelte';
   import type { Snippet } from 'svelte';
 

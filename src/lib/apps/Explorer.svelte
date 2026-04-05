@@ -1,128 +1,192 @@
 <script lang="ts">
-  import { getContext } from 'svelte';
-  import { SvelteSet } from 'svelte/reactivity';
-  import type { WindowContext } from '$lib/components/Window.svelte';
+  import { getContext } from 'svelte'
+  import type { WindowContext } from '$lib/components/Window.svelte'
+  import UiInputSearch from '$lib/components/UiInputSearch.svelte'
+  import UiButtonGroup from '$lib/components/UiButtonGroup.svelte'
+  import UiMenu from '$lib/components/UiMenu.svelte'
+  import type { MenuItem } from '$lib/components/UiMenu.js'
+  import UiPanels from '$lib/components/UiPanels.svelte'
+  import UiSidebar from '$lib/components/UiSidebar.svelte'
 
-  getContext<WindowContext>('window').setSize(680, 460);
+  getContext<WindowContext>('window').setSize(860, 520)
 
   type FileItem = {
-    name: string;
-    type: 'folder' | 'file';
-    icon: string;
-    size?: string;
-    modified?: string;
-    children?: FileItem[];
-  };
+    name: string
+    type: 'folder' | 'file'
+    icon: string
+    size?: string
+    modified?: string
+    kind?: string
+    children?: FileItem[]
+  }
 
   const tree: FileItem[] = [
     {
-      name: 'Рабочий стол',
+      name: 'Избранное',
       type: 'folder',
-      icon: '🖥️',
+      icon: '⭐',
       children: [
         {
-          name: 'Проекты',
+          name: 'Рабочий стол',
           type: 'folder',
-          icon: '📁',
+          icon: '🖥️',
           children: [
+            { name: 'Заметки.txt', type: 'file', icon: '📝', size: '2 КБ', modified: '25.03.2026', kind: 'Текст' },
             {
-              name: 'nasos-svelte',
+              name: 'Проекты',
               type: 'folder',
               icon: '📁',
               children: [
-                { name: 'src', type: 'folder', icon: '📁', children: [] },
-                { name: 'package.json', type: 'file', icon: '📄', size: '1 КБ' }
+                {
+                  name: 'nasos-svelte',
+                  type: 'folder',
+                  icon: '📁',
+                  children: [
+                    { name: 'src', type: 'folder', icon: '📁', children: [] },
+                    { name: 'package.json', type: 'file', icon: '📄', size: '1 КБ', kind: 'JSON' }
+                  ]
+                }
               ]
             }
           ]
         },
-        { name: 'Заметки.txt', type: 'file', icon: '📝', size: '2 КБ', modified: '25.03.2026' }
-      ]
-    },
-    {
-      name: 'Документы',
-      type: 'folder',
-      icon: '📂',
-      children: [
-        { name: 'Отчёт.docx', type: 'file', icon: '📄', size: '45 КБ', modified: '20.03.2026' },
         {
-          name: 'Презентация.pptx',
-          type: 'file',
-          icon: '📊',
-          size: '2 МБ',
-          modified: '18.03.2026'
+          name: 'Загрузки',
+          type: 'folder',
+          icon: '📥',
+          children: [
+            { name: 'setup.exe', type: 'file', icon: '⚙️', size: '55 МБ', modified: '24.03.2026', kind: 'Программа' },
+            { name: 'фото.jpg', type: 'file', icon: '🖼️', size: '3 МБ', modified: '22.03.2026', kind: 'Изображение' }
+          ]
         },
-        { name: 'Таблица.xlsx', type: 'file', icon: '📊', size: '120 КБ', modified: '15.03.2026' }
+        {
+          name: 'Документы',
+          type: 'folder',
+          icon: '📂',
+          children: [
+            { name: 'Отчёт.docx', type: 'file', icon: '📄', size: '45 КБ', modified: '20.03.2026', kind: 'Документ' },
+            { name: 'Презентация.pptx', type: 'file', icon: '📊', size: '2 МБ', modified: '18.03.2026', kind: 'Презентация' },
+            { name: 'Таблица.xlsx', type: 'file', icon: '📊', size: '120 КБ', modified: '15.03.2026', kind: 'Таблица' }
+          ]
+        }
       ]
     },
     {
-      name: 'Загрузки',
-      type: 'folder',
-      icon: '📥',
-      children: [
-        { name: 'setup.exe', type: 'file', icon: '⚙️', size: '55 МБ', modified: '24.03.2026' },
-        { name: 'фото.jpg', type: 'file', icon: '🖼️', size: '3 МБ', modified: '22.03.2026' }
-      ]
-    },
-    {
-      name: 'Музыка',
-      type: 'folder',
-      icon: '🎵',
-      children: [
-        { name: 'playlist.mp3', type: 'file', icon: '🎵', size: '8 МБ', modified: '10.03.2026' }
-      ]
-    },
-    {
-      name: 'Этот компьютер',
+      name: 'Устройства',
       type: 'folder',
       icon: '💻',
       children: [
+        { name: 'Музыка', type: 'folder', icon: '🎵', children: [
+          { name: 'playlist.mp3', type: 'file', icon: '🎵', size: '8 МБ', modified: '10.03.2026', kind: 'Аудио' }
+        ]},
         { name: 'Диск C:', type: 'folder', icon: '💾', children: [] },
         { name: 'Диск D:', type: 'folder', icon: '💾', children: [] }
       ]
     }
-  ];
+  ]
 
-  // Ключ выделения — путь через '/', уникален для любого узла дерева
-  let selectedKey = $state<string | null>('Рабочий стол');
-  let expanded = $state(new SvelteSet<string>(['Рабочий стол']));
-  let currentFolder = $state<FileItem>(tree[0]);
-  let path = $state<string[]>(['Рабочий стол']);
-  let searchQuery = $state('');
-
-  function openItem(item: FileItem, itemPath: string[]) {
-    const key = itemPath.join('/');
-    selectedKey = key;
-    if (item.type !== 'folder') return;
-    currentFolder = item;
-    path = itemPath;
-    if (expanded.has(key)) {
-      expanded.delete(key);
-    } else {
-      expanded.add(key);
-    }
+  // Sidebar секции (разделы с заголовками)
+  type SidebarSection = {
+    title: string
+    items: { item: FileItem; itemPath: string[] }[]
   }
 
-  function findByPath(parts: string[]): FileItem | null {
-    let curr: FileItem[] = tree;
-    let found: FileItem | null = null;
-    for (const p of parts) {
-      found = curr.find((f) => f.name === p) ?? null;
-      if (!found) return null;
-      curr = found.children ?? [];
+  const sidebarSections: SidebarSection[] = [
+    {
+      title: 'Избранное',
+      items: [
+        { item: tree[0].children![0], itemPath: ['Избранное', 'Рабочий стол'] },
+        { item: tree[0].children![1], itemPath: ['Избранное', 'Загрузки'] },
+        { item: tree[0].children![2], itemPath: ['Избранное', 'Документы'] }
+      ]
+    },
+    {
+      title: 'Устройства',
+      items: [
+        { item: tree[1].children![0], itemPath: ['Устройства', 'Музыка'] },
+        { item: tree[1].children![1], itemPath: ['Устройства', 'Диск C:'] },
+        { item: tree[1].children![2], itemPath: ['Устройства', 'Диск D:'] }
+      ]
     }
-    return found;
+  ]
+
+  const menuItems: MenuItem[] = sidebarSections.map((section) => ({
+    key: section.title,
+    label: section.title,
+    collapsible: true,
+    children: section.items.map(({ item, itemPath }) => ({
+      key: sidebarItemKey(itemPath),
+      label: item.name,
+      icon: item.icon
+    }))
+  }))
+
+  let selectedKey = $state<string | null>('Избранное/Рабочий стол')
+  let currentFolder = $state<FileItem>(tree[0].children![0])
+  let path = $state<string[]>(['Рабочий стол'])
+  let searchQuery = $state('')
+  let viewMode = $state<'icons' | 'list'>('icons')
+  let history = $state<{ folder: FileItem; path: string[] }[]>([
+    { folder: tree[0].children![0], path: ['Рабочий стол'] }
+  ])
+  let historyIdx = $state(0)
+
+  function navigateTo(item: FileItem, itemPath: string[]) {
+    if (item.type !== 'folder') return
+    // обрезаем историю вперёд
+    history = history.slice(0, historyIdx + 1)
+    history.push({ folder: item, path: [itemPath.at(-1)!] })
+    historyIdx = history.length - 1
+    currentFolder = item
+    path = [itemPath.at(-1)!]
+    selectedKey = itemPath.join('/')
+    searchQuery = ''
   }
 
-  function navigatePath(idx: number) {
-    const newPath = path.slice(0, idx + 1);
-    const item = findByPath(newPath);
-    if (item) {
-      currentFolder = item;
-      path = newPath;
-      selectedKey = newPath.join('/');
-    }
+  function goBack() {
+    if (historyIdx <= 0) return
+    historyIdx--
+    currentFolder = history[historyIdx].folder
+    path = history[historyIdx].path
+    selectedKey = path.join('/')
   }
+
+  function goForward() {
+    if (historyIdx >= history.length - 1) return
+    historyIdx++
+    currentFolder = history[historyIdx].folder
+    path = history[historyIdx].path
+    selectedKey = path.join('/')
+  }
+
+  function navigateBreadcrumb(idx: number) {
+    // idx 0 = корень текущего пути
+    if (idx === path.length - 1) return
+    // Находим папку по части пути
+    const newPath = path.slice(0, idx + 1)
+    // Ищем в дереве
+    function findItem(items: FileItem[], parts: string[]): FileItem | null {
+      const [head, ...rest] = parts
+      const found = items.find((i) => i.name === head)
+      if (!found) return null
+      if (rest.length === 0) return found
+      return findItem(found.children ?? [], rest)
+    }
+    // Пробуем найти в дереве через flatten sections
+    const flat = sidebarSections.flatMap((s) => s.items)
+    const match = flat.find((e) => e.itemPath.at(-1) === newPath[0])
+    if (!match) return
+    const fullPath = [...match.itemPath, ...newPath.slice(1)]
+    const item = findItem(match.item.children ?? [], newPath.slice(1)) ?? match.item
+    history = history.slice(0, historyIdx + 1)
+    history.push({ folder: item, path: newPath })
+    historyIdx = history.length - 1
+    currentFolder = item
+    path = newPath
+    selectedKey = fullPath.join('/')
+  }
+
+  let selectedItem = $state<string | null>(null)
 
   const displayItems = $derived(
     searchQuery
@@ -130,236 +194,305 @@
           f.name.toLowerCase().includes(searchQuery.toLowerCase())
         )
       : (currentFolder.children ?? [])
-  );
+  )
 
-  function buildFlatTree(
-    items: FileItem[],
-    depth = 0,
-    pathArr: string[] = []
-  ): { item: FileItem; depth: number; itemPath: string[] }[] {
-    const result: { item: FileItem; depth: number; itemPath: string[] }[] = [];
-    for (const item of items) {
-      const itemPath = [...pathArr, item.name];
-      result.push({ item, depth, itemPath });
-      if (item.type === 'folder' && expanded.has(itemPath.join('/')) && item.children) {
-        result.push(...buildFlatTree(item.children, depth + 1, itemPath));
-      }
-    }
-    return result;
+  const selectedInfo = $derived(
+    selectedItem
+      ? displayItems.find((i) => i.name === selectedItem) ?? null
+      : null
+  )
+
+  function handleItemClick(item: FileItem) {
+    selectedItem = item.name
   }
 
-  const flatTree = $derived(buildFlatTree(tree));
+  function handleItemDblclick(item: FileItem, basePathKey: string) {
+    if (item.type === 'folder') {
+      navigateTo(item, [...selectedKey!.split('/'), item.name])
+    }
+  }
+
+  function sidebarItemKey(itemPath: string[]) {
+    return itemPath.join('/')
+  }
 </script>
 
 <div class="explorer">
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <button class="tb-btn" onclick={() => navigatePath(path.length - 2)} disabled={path.length <= 1}
-      >◀</button
-    >
-    <div class="breadcrumb">
-      {#each path as part, i (i)}
-        {#if i > 0}<span class="sep">›</span>{/if}
-        <button class="crumb" onclick={() => navigatePath(i)}>{part}</button>
-      {/each}
-    </div>
-    <input class="search" type="text" placeholder="🔍 Поиск..." bind:value={searchQuery} />
-  </div>
+  <UiPanels leftWidth={180}>
+    {#snippet left()}
+      <UiSidebar>
+        <UiMenu
+          items={menuItems}
+          value={selectedKey}
+          onselect={(key) => {
+            const flat = sidebarSections.flatMap((s) => s.items)
+            const match = flat.find((e) => sidebarItemKey(e.itemPath) === key)
+            if (match) navigateTo(match.item, match.itemPath)
+          }}
+        />
+      </UiSidebar>
+    {/snippet}
 
-  <div class="content">
-    <!-- Sidebar tree -->
-    <div class="sidebar">
-      {#each flatTree as { item, depth, itemPath } (itemPath.join('/'))}
-        <button
-          class="tree-item"
-          class:selected={selectedKey === itemPath.join('/')}
-          style="padding-left: {12 + depth * 16}px"
-          onclick={() => openItem(item, itemPath)}
-        >
-          {#if item.type === 'folder'}
-            <span class="arrow">{expanded.has(itemPath.join('/')) ? '▾' : '▸'}</span>
-          {:else}
-            <span class="arrow"> </span>
-          {/if}
-          <span class="item-icon">{item.icon}</span>
-          <span class="item-name">{item.name}</span>
-        </button>
-      {/each}
-    </div>
-
-    <!-- Main content -->
-    <div class="main">
-      {#if displayItems.length === 0}
-        <div class="empty">Папка пуста</div>
-      {:else}
-        <div class="file-grid">
-          {#each displayItems as item (item.name)}
-            <button
-              class="file-item"
-              class:selected={selectedKey === [...path, item.name].join('/')}
-              ondblclick={() => item.type === 'folder' && openItem(item, [...path, item.name])}
-              onclick={() => (selectedKey = [...path, item.name].join('/'))}
-            >
-              <span class="file-icon">{item.icon}</span>
-              <span class="file-name">{item.name}</span>
-              {#if item.size}
-                <span class="file-meta">{item.size}</span>
-              {/if}
+    {#snippet main()}
+      <div class="main">
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="nav-btns">
+            <button class="nav-btn" onclick={goBack} disabled={historyIdx <= 0} title="Назад">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             </button>
-          {/each}
-        </div>
-      {/if}
-    </div>
-  </div>
+            <button class="nav-btn" onclick={goForward} disabled={historyIdx >= history.length - 1} title="Вперёд">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M5 2L10 7L5 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
 
-  <!-- Status bar -->
-  <div class="statusbar">
-    {displayItems.length} объект(ов)
-    {#if selectedKey}
-      &nbsp;· Выбран: {selectedKey.split('/').at(-1)}
-    {/if}
-  </div>
+          <!-- Breadcrumb -->
+          <div class="breadcrumb">
+            {#each path as part, i (i)}
+              {#if i > 0}<span class="sep">›</span>{/if}
+              <button class="crumb" class:last={i === path.length - 1} onclick={() => navigateBreadcrumb(i)}>
+                {part}
+              </button>
+            {/each}
+          </div>
+
+          <!-- View toggle & search -->
+          <div class="toolbar-right">
+            <UiButtonGroup
+              items={['⊞', '☰']}
+              value={viewMode === 'icons' ? '⊞' : '☰'}
+              onchange={(v) => (viewMode = v === '⊞' ? 'icons' : 'list')}
+            />
+            <UiInputSearch bind:value={searchQuery} placeholder="Поиск" />
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+          {#if displayItems.length === 0}
+            <div class="empty">
+              <span class="empty-icon">📂</span>
+              <span>{searchQuery ? 'Ничего не найдено' : 'Папка пуста'}</span>
+            </div>
+          {:else if viewMode === 'icons'}
+            <div class="icons-grid">
+              {#each displayItems as item (item.name)}
+                <button
+                  class="file-item"
+                  class:selected={selectedItem === item.name}
+                  onclick={() => handleItemClick(item)}
+                  ondblclick={() => handleItemDblclick(item, selectedKey ?? '')}
+                >
+                  <span class="file-icon">{item.icon}</span>
+                  <span class="file-name">{item.name}</span>
+                </button>
+              {/each}
+            </div>
+          {:else}
+            <div class="list-view">
+              <div class="list-header">
+                <span class="col-name">Имя</span>
+                <span class="col-date">Изменён</span>
+                <span class="col-kind">Тип</span>
+                <span class="col-size">Размер</span>
+              </div>
+              <div class="list-body">
+                {#each displayItems as item (item.name)}
+                  <button
+                    class="list-item"
+                    class:selected={selectedItem === item.name}
+                    onclick={() => handleItemClick(item)}
+                    ondblclick={() => handleItemDblclick(item, selectedKey ?? '')}
+                  >
+                    <span class="col-name">
+                      <span class="list-icon">{item.icon}</span>
+                      {item.name}
+                    </span>
+                    <span class="col-date">{item.modified ?? '—'}</span>
+                    <span class="col-kind">{item.kind ?? (item.type === 'folder' ? 'Папка' : 'Файл')}</span>
+                    <span class="col-size">{item.size ?? '—'}</span>
+                  </button>
+                {/each}
+              </div>
+            </div>
+          {/if}
+        </div>
+
+        <!-- Status bar -->
+        <div class="statusbar">
+          <span>{displayItems.length} объект{displayItems.length === 1 ? '' : 'ов'}</span>
+          {#if selectedInfo}
+            <span class="status-sep">·</span>
+            <span class="status-name">{selectedInfo.name}</span>
+            {#if selectedInfo.size}
+              <span class="status-sep">·</span>
+              <span>{selectedInfo.size}</span>
+            {/if}
+          {/if}
+        </div>
+      </div>
+    {/snippet}
+  </UiPanels>
 </div>
 
 <style>
   .explorer {
-    display: flex;
-    flex-direction: column;
     height: 100%;
     font-size: 13px;
+    background: #f5f6fa;
+    overflow: hidden;
+  }
+
+  /* ─── Main ─── */
+  .main {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     background: #fafafa;
   }
 
+  /* ─── Toolbar ─── */
   .toolbar {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 8px;
-    background: #f0f0f0;
-    border-bottom: 1px solid #ccc;
+    gap: 8px;
+    padding: 6px 10px;
+    background: #f0f1f5;
+    border-bottom: 1px solid #dde0ea;
+    flex-shrink: 0;
   }
 
-  .tb-btn {
-    padding: 2px 8px;
-    border: 1px solid #bbb;
-    border-radius: 3px;
+  .nav-btns {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .nav-btn {
+    width: 26px;
+    height: 26px;
+    border: 1px solid #c8ccd8;
+    border-radius: 6px;
     background: white;
+    color: #444;
     cursor: pointer;
-    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s;
+    padding: 0;
   }
-  .tb-btn:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
-  .tb-btn:hover:not(:disabled) {
+  .nav-btn:hover:not(:disabled) {
     background: #e0e8f8;
+    border-color: #4a90d9;
+    color: #4a90d9;
+  }
+  .nav-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
   }
 
   .breadcrumb {
     flex: 1;
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
+    gap: 2px;
+    padding: 4px 10px;
     background: white;
-    border: 1px solid #bbb;
-    border-radius: 3px;
+    border: 1px solid #c8ccd8;
+    border-radius: 7px;
     overflow: hidden;
+    min-width: 0;
   }
 
   .crumb {
-    cursor: pointer;
-    color: #0066cc;
-    white-space: nowrap;
     background: none;
     border: none;
-    padding: 0;
-    font-size: inherit;
+    padding: 0 2px;
+    font-size: 13px;
     font-family: inherit;
+    color: #4a90d9;
+    cursor: pointer;
+    white-space: nowrap;
+    border-radius: 3px;
   }
   .crumb:hover {
     text-decoration: underline;
   }
+  .crumb.last {
+    color: #222;
+    cursor: default;
+    font-weight: 500;
+  }
+  .crumb.last:hover {
+    text-decoration: none;
+  }
+
   .sep {
-    color: #999;
-  }
-
-  .search {
-    width: 160px;
-    padding: 3px 8px;
-    border: 1px solid #bbb;
-    border-radius: 3px;
+    color: #aaa;
     font-size: 12px;
+    user-select: none;
   }
 
-  .content {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-  }
-
-  .sidebar {
-    width: 200px;
-    overflow-y: auto;
-    border-right: 1px solid #ddd;
-    background: #f7f7f7;
-    padding: 4px 0;
-  }
-
-  .tree-item {
+  .toolbar-right {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding-top: 3px;
-    padding-bottom: 3px;
-    padding-right: 8px;
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    background: none;
-    border: none;
-    width: 100%;
-    text-align: left;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* Override UiButtonGroup padding for toolbar */
+  .toolbar-right :global(.btn-group) {
+    padding: 0;
+    border-bottom: none;
+    background: transparent;
+    gap: 2px;
+  }
+  .toolbar-right :global(.btn) {
+    padding: 4px 9px;
     font-size: 13px;
-    font-family: inherit;
-    color: inherit;
-  }
-  .tree-item:hover {
-    background: #ddeeff;
-  }
-  .tree-item.selected {
-    background: #cce0ff;
   }
 
-  .arrow {
-    font-size: 10px;
-    width: 12px;
-    flex-shrink: 0;
-  }
-  .item-icon {
-    flex-shrink: 0;
-  }
-  .item-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
+  /* Override UiInputSearch for toolbar */
+  .toolbar-right :global(.search) {
+    width: 140px;
+    margin-bottom: 0;
+    padding: 4px 10px;
+    text-align: left;
   }
 
-  .main {
+  /* ─── Content ─── */
+  .content {
     flex: 1;
     overflow-y: auto;
-    padding: 8px;
+    padding: 10px;
   }
 
   .empty {
-    color: #999;
-    text-align: center;
-    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 100%;
+    color: #aaa;
+    font-size: 13px;
+  }
+  .empty-icon {
+    font-size: 40px;
+    opacity: 0.4;
   }
 
-  .file-grid {
+  /* Icons view */
+  .icons-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     align-content: flex-start;
   }
 
@@ -367,46 +500,117 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    width: 80px;
-    padding: 8px 4px;
-    border-radius: 4px;
+    gap: 5px;
+    width: 88px;
+    padding: 10px 6px 8px;
+    border-radius: 8px;
     cursor: pointer;
-    text-align: center;
     border: 2px solid transparent;
     background: none;
-    font-size: 13px;
     font-family: inherit;
-    color: inherit;
+    color: #222;
+    transition: background 0.1s;
   }
   .file-item:hover {
-    background: #e8f0fe;
+    background: rgba(74, 144, 217, 0.1);
   }
   .file-item.selected {
-    background: #cce0ff;
+    background: rgba(74, 144, 217, 0.18);
     border-color: #4a90d9;
   }
 
   .file-icon {
-    font-size: 28px;
+    font-size: 34px;
+    line-height: 1;
   }
   .file-name {
     font-size: 11px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
+    text-align: center;
     word-break: break-word;
-  }
-  .file-meta {
-    font-size: 10px;
-    color: #888;
+    line-height: 1.3;
+    color: #222;
+    max-width: 100%;
   }
 
-  .statusbar {
-    padding: 3px 10px;
-    background: #f0f0f0;
-    border-top: 1px solid #ccc;
+  /* List view */
+  .list-view {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .list-header {
+    display: grid;
+    grid-template-columns: 1fr 110px 90px 80px;
+    padding: 4px 10px;
     font-size: 11px;
-    color: #555;
+    font-weight: 600;
+    color: #888;
+    border-bottom: 1px solid #dde0ea;
+    background: #f5f6fa;
+    position: sticky;
+    top: 0;
+    user-select: none;
+  }
+
+  .list-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .list-item {
+    display: grid;
+    grid-template-columns: 1fr 110px 90px 80px;
+    align-items: center;
+    padding: 5px 10px;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 13px;
+    color: #222;
+    cursor: pointer;
+    border-radius: 5px;
+    text-align: left;
+    border-bottom: 1px solid transparent;
+    transition: background 0.1s;
+  }
+  .list-item:hover {
+    background: rgba(74, 144, 217, 0.08);
+  }
+  .list-item.selected {
+    background: rgba(74, 144, 217, 0.18);
+  }
+
+  .list-icon {
+    margin-right: 7px;
+    font-size: 15px;
+  }
+
+  .col-date,
+  .col-kind,
+  .col-size {
+    font-size: 12px;
+    color: #777;
+  }
+
+  /* ─── Status bar ─── */
+  .statusbar {
+    padding: 4px 12px;
+    background: #f0f1f5;
+    border-top: 1px solid #dde0ea;
+    font-size: 11px;
+    color: #777;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .status-sep {
+    color: #bbb;
+  }
+  .status-name {
+    color: #444;
+    font-weight: 500;
   }
 </style>

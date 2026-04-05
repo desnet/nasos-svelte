@@ -3,6 +3,8 @@
   import { wallpaperStore, WALLPAPERS, type Wallpaper } from '$lib/stores/wallpaper.svelte';
   import UiButtonGroup from '$lib/components/UiButtonGroup.svelte';
   import UiButton from '$lib/components/UiButton.svelte';
+  import UiBadge from '$lib/components/UiBadge.svelte';
+  import UiPanels from '$lib/components/UiPanels.svelte';
   import type { WindowContext } from '$lib/components/Window.svelte';
 
   getContext<WindowContext>('window').setSize(720, 480);
@@ -25,69 +27,68 @@
 </script>
 
 <div class="wallpapers">
-  <!-- Превью -->
-  <div class="preview-pane">
-    <div class="screen-frame">
-      <div class="screen-bg" style="background: {activePreview.css}">
-        <!-- Имитация иконок -->
-        <div class="mock-icons">
-          {#each ['📁', '📝', '🗑️', '💻', '🏪'] as ic (ic)}
-            <div class="mock-icon">
-              <span>{ic}</span>
-              <div class="mock-label"></div>
-            </div>
+  <UiPanels rightWidth={220}>
+    {#snippet main()}
+      <!-- Галерея -->
+      <div class="gallery-pane">
+        <UiButtonGroup items={categories} value={selectedCat} onchange={(v) => (selectedCat = v)} />
+        <div class="grid">
+          {#each filtered as w (w.id)}
+            <button
+              class="thumb"
+              class:current={wallpaperStore.current.id === w.id}
+              class:previewing={preview?.id === w.id}
+              onclick={() => (preview = w)}
+              ondblclick={() => apply(w)}
+              title="{w.name} — двойной клик для применения"
+            >
+              <div class="thumb-bg" style="background: {w.thumb}"></div>
+              {#if wallpaperStore.current.id === w.id}
+                <div class="thumb-badge current">✓</div>
+              {/if}
+              <div class="thumb-name">{w.name}</div>
+            </button>
           {/each}
         </div>
-        <!-- Имитация панели задач -->
-        <div class="mock-taskbar"></div>
+        <p class="hint">Один клик — предпросмотр · Двойной клик — применить</p>
       </div>
-    </div>
-    <div class="preview-info">
-      <span class="preview-name">{activePreview.name}</span>
-      <span class="preview-cat">{activePreview.category}</span>
-    </div>
-    <div class="preview-actions">
-      {#if preview && preview.id !== wallpaperStore.current.id}
-        <UiButton onclick={() => apply(preview!)}>✓ Применить</UiButton>
-        <UiButton variant="secondary" onclick={() => (preview = null)}>Отмена</UiButton>
-      {:else}
-        <span class="applied-badge">✓ Установлено</span>
-      {/if}
-    </div>
-  </div>
+    {/snippet}
 
-  <!-- Галерея -->
-  <div class="gallery-pane">
-    <!-- Категории -->
-    <UiButtonGroup items={categories} value={selectedCat} onchange={(v) => (selectedCat = v)} />
-
-    <!-- Сетка -->
-    <div class="grid">
-      {#each filtered as w (w.id)}
-        <button
-          class="thumb"
-          class:current={wallpaperStore.current.id === w.id}
-          class:previewing={preview?.id === w.id}
-          onclick={() => (preview = w)}
-          ondblclick={() => apply(w)}
-          title="{w.name} — двойной клик для применения"
-        >
-          <div class="thumb-bg" style="background: {w.thumb}"></div>
-          {#if wallpaperStore.current.id === w.id}
-            <div class="thumb-badge current">✓</div>
+    {#snippet right()}
+      <!-- Превью -->
+      <div class="preview-pane">
+        <div class="screen-frame">
+          <div class="screen-bg" style="background: {activePreview.css}">
+            <div class="mock-icons">
+              {#each ['📁', '📝', '🗑️', '💻', '🏪'] as ic (ic)}
+                <div class="mock-icon">
+                  <span>{ic}</span>
+                  <div class="mock-label"></div>
+                </div>
+              {/each}
+            </div>
+            <div class="mock-taskbar"></div>
+          </div>
+        </div>
+        <div class="preview-info">
+          <span class="preview-name">{activePreview.name}</span>
+          <UiBadge>{activePreview.category}</UiBadge>
+        </div>
+        <div class="preview-actions">
+          {#if preview && preview.id !== wallpaperStore.current.id}
+            <UiButton onclick={() => apply(preview!)}>✓ Применить</UiButton>
+            <UiButton variant="secondary" onclick={() => (preview = null)}>Отмена</UiButton>
+          {:else}
+            <span class="applied-badge">✓ Установлено</span>
           {/if}
-          <div class="thumb-name">{w.name}</div>
-        </button>
-      {/each}
-    </div>
-
-    <p class="hint">Один клик — предпросмотр · Двойной клик — применить</p>
-  </div>
+        </div>
+      </div>
+    {/snippet}
+  </UiPanels>
 </div>
 
 <style>
   .wallpapers {
-    display: flex;
     height: 100%;
     font-size: 13px;
     background: #f5f6fa;
@@ -95,15 +96,14 @@
 
   /* Preview pane */
   .preview-pane {
-    width: 220px;
-    flex-shrink: 0;
-    border-right: 1px solid #dde0ea;
+    height: 100%;
     background: #fff;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 20px 16px;
     gap: 12px;
+    overflow-y: auto;
   }
 
   .screen-frame {
@@ -169,15 +169,7 @@
     font-size: 14px;
     color: #222;
   }
-  .preview-cat {
-    font-size: 11px;
-    color: #888;
-    background: #eef0f8;
-    padding: 2px 8px;
-    border-radius: 10px;
-  }
-
-  .preview-actions {
+.preview-actions {
     display: flex;
     gap: 8px;
     align-items: center;
@@ -191,7 +183,7 @@
 
   /* Gallery pane */
   .gallery-pane {
-    flex: 1;
+    height: 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;

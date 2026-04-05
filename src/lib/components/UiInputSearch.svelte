@@ -28,7 +28,6 @@
     font-size: 12px;
     outline: none;
     font-family: inherit;
-    margin-bottom: 4px;
     width: 100%;
     box-sizing: border-box;
     text-align: center;

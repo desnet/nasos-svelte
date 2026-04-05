@@ -5,18 +5,18 @@
   import { apps } from '$lib/stores/apps.svelte';
   import { widgets } from '$lib/stores/widgets.svelte';
   import type { DragItem } from '$lib/stores/drag.svelte';
-  import type { GridItem } from '$lib/components/Grid.svelte';
+  import type { GridItem } from '$lib/components/UiGrid.svelte';
   import type { ShortcutConfig } from '$lib/components/Shortcut.svelte';
   import type { WidgetConfig } from '$lib/components/Widget.svelte';
 
   // Grid components
-  import GridCell from '$lib/components/GridCell.svelte';
+  import UiGridCell from '$lib/components/UiGridCell.svelte';
   import Shortcut from '$lib/components/Shortcut.svelte';
   import Widget from '$lib/components/Widget.svelte';
 
   // Layout components
   import MenuBar from '$lib/components/MenuBar.svelte';
-  import Grid from '$lib/components/Grid.svelte';
+  import UiGrid from '$lib/components/UiGrid.svelte';
   import Dock from '$lib/components/Dock.svelte';
 
   // Window infrastructure
@@ -158,7 +158,7 @@
   <MenuBar />
 
   <div class="desktop-area">
-    <Grid
+    <UiGrid
       cellW={22}
       cellH={22}
       items={gridItems}
@@ -171,7 +171,7 @@
       onDrop={handleDesktopDrop}
     >
       {#each gridItems as item (item.id)}
-        <GridCell {item}>
+        <UiGridCell {item}>
           {#if item.shortcut}
             <Shortcut
               config={item.shortcut}
@@ -186,9 +186,9 @@
               {#if WidgetSomp}<WidgetSomp />{/if}
             </Widget>
           {/if}
-        </GridCell>
+        </UiGridCell>
       {/each}
-    </Grid>
+    </UiGrid>
 
     <!-- Desktop overlay backdrop (для окон с options.overlay) -->
     {#if desktop.windows.some((w) => w.options?.overlay && !w.minimized)}
