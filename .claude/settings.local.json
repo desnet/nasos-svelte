@@ -8,7 +8,13 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(npm run:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npx prettier:*)",
+      "Bash(git stash:*)",
+      "Bash(mv /Users/mac/dev/VSCode/nasos-svelte/src/lib/components/DesktopGrid.svelte /Users/mac/dev/VSCode/nasos-svelte/src/lib/components/Grid.svelte)",
+      "Bash(mv /Users/mac/dev/VSCode/nasos-svelte/src/lib/components/DesktopGridCell.svelte /Users/mac/dev/VSCode/nasos-svelte/src/lib/components/GridCell.svelte)",
+      "Bash(mv /Users/mac/dev/VSCode/nasos-svelte/src/lib/components/Grid.svelte /Users/mac/dev/VSCode/nasos-svelte/src/lib/components/UiGrid.svelte)",
+      "Bash(mv /Users/mac/dev/VSCode/nasos-svelte/src/lib/components/GridCell.svelte /Users/mac/dev/VSCode/nasos-svelte/src/lib/components/UiGridCell.svelte)"
     ]
   }
 }
