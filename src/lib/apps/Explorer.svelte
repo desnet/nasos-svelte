@@ -8,6 +8,12 @@
   import UiPanels from '$lib/components/UiPanels.svelte'
   import UiSidebar from '$lib/components/UiSidebar.svelte'
   import UiButton from '$lib/components/UiButton.svelte'
+  import UiGrid from '$lib/components/UiGrid.svelte'
+  import UiGridCell from '$lib/components/UiGridCell.svelte'
+  import type { GridItem } from '$lib/components/UiGrid.svelte'
+  import UiShortcut from '$lib/components/UiShortcut.svelte'
+  import UiTable from '$lib/components/UiTable.svelte'
+  import type { UiTableColumn } from '$lib/components/UiTable.js'
 
   getContext<WindowContext>('window').setSize(860, 520)
 
@@ -142,6 +148,7 @@
     path = [itemPath.at(-1)!]
     selectedKey = itemPath.join('/')
     searchQuery = ''
+    selectedNames = new Set()
   }
 
   function goBack() {
@@ -187,7 +194,14 @@
     selectedKey = fullPath.join('/')
   }
 
-  let selectedItem = $state<string | null>(null)
+  const listColumns: UiTableColumn[] = [
+    { key: 'name', caption: 'Имя' },
+    { key: 'modified', caption: 'Изменён', width: '110px' },
+    { key: 'kind', caption: 'Тип', width: '90px' },
+    { key: 'size', caption: 'Размер', width: '80px' }
+  ]
+
+  let selectedNames = $state<Set<string>>(new Set())
 
   const displayItems = $derived(
     searchQuery
@@ -197,14 +211,47 @@
       : (currentFolder.children ?? [])
   )
 
+  // Преобразуем displayItems в GridItem[] для UiGrid
+  const CELL_W = 96
+  const CELL_H = 72
+  let gridContentW = $state(0)
+
+  const iconGridItems = $derived.by<GridItem[]>(() => {
+    const cols = Math.max(1, Math.floor(gridContentW / CELL_W))
+    return displayItems.map((item, idx) => ({
+      id: idx + 1,
+      col: (idx % cols) + 1,
+      row: Math.floor(idx / cols) + 1,
+      colSpan: 1,
+      rowSpan: 1
+    }))
+  })
+
   const selectedInfo = $derived(
-    selectedItem
-      ? displayItems.find((i) => i.name === selectedItem) ?? null
+    selectedNames.size === 1
+      ? displayItems.find((i) => selectedNames.has(i.name)) ?? null
       : null
   )
 
-  function handleItemClick(item: FileItem) {
-    selectedItem = item.name
+  function handleGridSelect(selected: GridItem[]) {
+    selectedNames = new Set(selected.map((g) => displayItems[g.id - 1]?.name).filter(Boolean) as string[])
+  }
+
+  const listRows = $derived(
+    displayItems.map((item) => ({
+      name: item.name,
+      modified: item.modified ?? '—',
+      kind: item.kind ?? (item.type === 'folder' ? 'Папка' : 'Файл'),
+      size: item.size ?? '—',
+      _icon: item.icon,
+      _item: item
+    }))
+  )
+
+  function handleListSelect(selected: Set<number>) {
+    selectedNames = new Set(
+      [...selected].map((idx) => displayItems[idx]?.name).filter(Boolean) as string[]
+    )
   }
 
   function handleItemDblclick(item: FileItem) {
@@ -284,58 +331,56 @@
               <span>{searchQuery ? 'Ничего не найдено' : 'Папка пуста'}</span>
             </div>
           {:else if viewMode === 'icons'}
-            <div class="icons-grid">
-              {#each displayItems as item (item.name)}
-                <button
-                  class="file-item"
-                  class:selected={selectedItem === item.name}
-                  onclick={() => handleItemClick(item)}
-                  ondblclick={() => handleItemDblclick(item)}
-                >
-                  <span class="file-icon">{item.icon}</span>
-                  <span class="file-name">{item.name}</span>
-                </button>
-              {/each}
+            <div class="icons-grid" bind:clientWidth={gridContentW}>
+              <UiGrid
+                cellW={CELL_W}
+                cellH={CELL_H}
+                items={iconGridItems}
+                selectable="multi"
+                onselect={handleGridSelect}
+              >
+                {#each iconGridItems as gridItem (gridItem.id)}
+                  {@const fileItem = displayItems[gridItem.id - 1]}
+                  <UiGridCell item={gridItem}>
+                    <UiShortcut
+                      variant="primary"
+                      config={{ icon: fileItem.icon, label: fileItem.name, app: '' }}
+                      ondblclick={() => handleItemDblclick(fileItem)}
+                    />
+                  </UiGridCell>
+                {/each}
+              </UiGrid>
             </div>
           {:else}
-            <div class="list-view">
-              <div class="list-header">
-                <span class="col-name">Имя</span>
-                <span class="col-date">Изменён</span>
-                <span class="col-kind">Тип</span>
-                <span class="col-size">Размер</span>
-              </div>
-              <div class="list-body">
-                {#each displayItems as item (item.name)}
-                  <button
-                    class="list-item"
-                    class:selected={selectedItem === item.name}
-                    onclick={() => handleItemClick(item)}
-                    ondblclick={() => handleItemDblclick(item)}
-                  >
-                    <span class="col-name">
-                      <span class="list-icon">{item.icon}</span>
-                      {item.name}
-                    </span>
-                    <span class="col-date">{item.modified ?? '—'}</span>
-                    <span class="col-kind">{item.kind ?? (item.type === 'folder' ? 'Папка' : 'Файл')}</span>
-                    <span class="col-size">{item.size ?? '—'}</span>
-                  </button>
-                {/each}
-              </div>
-            </div>
+            <UiTable
+              columns={listColumns}
+              rows={listRows}
+              onselect={handleListSelect}
+              onrowdblclick={(row) => handleItemDblclick((row as { _item: FileItem })._item)}
+            >
+              {#snippet cell_name(row: Record<string, unknown>)}
+                <span class="list-name-cell">
+                  <span class="list-icon">{(row as { _icon: string })._icon}</span>
+                  {row.name as string}
+                </span>
+              {/snippet}
+            </UiTable>
           {/if}
         </div>
 
         <!-- Status bar -->
         <div class="statusbar">
           <span>{displayItems.length} объект{displayItems.length === 1 ? '' : 'ов'}</span>
-          {#if selectedInfo}
+          {#if selectedNames.size > 0}
             <span class="status-sep">·</span>
-            <span class="status-name">{selectedInfo.name}</span>
-            {#if selectedInfo.size}
-              <span class="status-sep">·</span>
-              <span>{selectedInfo.size}</span>
+            {#if selectedNames.size > 1}
+              <span>Выбрано: {selectedNames.size}</span>
+            {:else if selectedInfo}
+              <span class="status-name">{selectedInfo.name}</span>
+              {#if selectedInfo.size}
+                <span class="status-sep">·</span>
+                <span>{selectedInfo.size}</span>
+              {/if}
             {/if}
           {/if}
         </div>
@@ -436,7 +481,6 @@
   .content {
     flex: 1;
     overflow-y: auto;
-    padding: 10px;
   }
 
   .empty {
@@ -456,107 +500,24 @@
 
   /* Icons view */
   .icons-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-content: flex-start;
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    box-sizing: border-box;
   }
 
-  .file-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    width: 88px;
-    padding: 10px 6px 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    border: 2px solid transparent;
-    background: none;
-    font-family: inherit;
-    color: #222;
-    transition: background 0.1s;
-  }
-  .file-item:hover {
-    background: rgba(74, 144, 217, 0.1);
-  }
-  .file-item.selected {
-    background: rgba(74, 144, 217, 0.18);
-    border-color: #4a90d9;
-  }
-
-  .file-icon {
-    font-size: 34px;
-    line-height: 1;
-  }
-  .file-name {
-    font-size: 11px;
-    text-align: center;
-    word-break: break-word;
-    line-height: 1.3;
-    color: #222;
-    max-width: 100%;
-  }
 
   /* List view */
-  .list-view {
+  .list-name-cell {
     display: flex;
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .list-header {
-    display: grid;
-    grid-template-columns: 1fr 110px 90px 80px;
-    padding: 4px 10px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #888;
-    border-bottom: 1px solid #dde0ea;
-    background: #f5f6fa;
-    position: sticky;
-    top: 0;
-    user-select: none;
-  }
-
-  .list-body {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .list-item {
-    display: grid;
-    grid-template-columns: 1fr 110px 90px 80px;
     align-items: center;
-    padding: 5px 10px;
-    border: none;
-    background: none;
-    font-family: inherit;
-    font-size: 13px;
-    color: #222;
-    cursor: pointer;
-    border-radius: 5px;
-    text-align: left;
-    border-bottom: 1px solid transparent;
-    transition: background 0.1s;
-  }
-  .list-item:hover {
-    background: rgba(74, 144, 217, 0.08);
-  }
-  .list-item.selected {
-    background: rgba(74, 144, 217, 0.18);
+    gap: 0;
   }
 
   .list-icon {
     margin-right: 7px;
     font-size: 15px;
-  }
-
-  .col-date,
-  .col-kind,
-  .col-size {
-    font-size: 12px;
-    color: #777;
+    flex-shrink: 0;
   }
 
   /* ─── Status bar ─── */
