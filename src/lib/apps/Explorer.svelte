@@ -13,7 +13,7 @@
   import type { GridItem } from '$lib/components/UiGrid.svelte'
   import UiShortcut from '$lib/components/UiShortcut.svelte'
   import UiTable from '$lib/components/UiTable.svelte'
-  import type { UiTableColumn } from '$lib/components/UiTable.js'
+  import type { UiTableColumn, UiTableRow } from '$lib/components/UiTable.js'
 
   getContext<WindowContext>('window').setSize(860, 520)
 
@@ -358,7 +358,7 @@
               onselect={handleListSelect}
               onrowdblclick={(row) => handleItemDblclick((row as { _item: FileItem })._item)}
             >
-              {#snippet cell_name(row: Record<string, unknown>)}
+              {#snippet cell_name(row: UiTableRow)}
                 <span class="list-name-cell">
                   <span class="list-icon">{(row as { _icon: string })._icon}</span>
                   {row.name as string}

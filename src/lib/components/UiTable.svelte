@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
-  import type { UiTableColumn } from '$lib/components/UiTable.js'
-
-  type Row = Record<string, unknown>
+  import type { UiTableColumn, UiTableRow } from '$lib/components/UiTable.js'
 
   let {
     columns,
@@ -13,10 +11,10 @@
     ...cellSnippets
   } = $props<{
     columns: UiTableColumn[]
-    rows: Row[]
+    rows: UiTableRow[]
     selected?: Set<number>
     onselect?: (selected: Set<number>) => void
-    onrowdblclick?: (row: Row, idx: number) => void
+    onrowdblclick?: (row: UiTableRow, idx: number) => void
     [key: string]: unknown
   }>()
 
@@ -54,8 +52,8 @@
       >
         {#each columns as col (col.key)}
           <span class="table-cell">
-            {#if (cellSnippets as Record<string, Snippet<[Row]>>)[`cell_${col.key}`]}
-              {@render (cellSnippets as Record<string, Snippet<[Row]>>)[`cell_${col.key}`](row)}
+            {#if (cellSnippets as Record<string, Snippet<[UiTableRow]>>)[`cell_${col.key}`]}
+              {@render (cellSnippets as Record<string, Snippet<[UiTableRow]>>)[`cell_${col.key}`](row)}
             {:else}
               {row[col.key] ?? '—'}
             {/if}

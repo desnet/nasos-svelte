@@ -3,3 +3,5 @@ export type UiTableColumn = {
   caption: string
   width?: string
 }
+
+export type UiTableRow = Record<string, unknown>
