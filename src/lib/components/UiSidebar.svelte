@@ -37,6 +37,7 @@
     height: 100%;
     background: #eceef3;
     overflow: hidden;
+    color: #666;
   }
 
   .sidebar-header {

@@ -1,19 +1,20 @@
 <script lang="ts">
-  export type ShortcutConfig = {
+  export type UiShortcutConfig = {
     icon: string;
     label: string;
     app: string;
     args?: Record<string, unknown>;
   };
 
-  let { config, ondblclick, onclick } = $props<{
-    config: ShortcutConfig;
-    ondblclick?: (config: ShortcutConfig) => void;
-    onclick?: (config: ShortcutConfig) => void;
+  let { config, ondblclick, onclick, variant = 'ghost' } = $props<{
+    config: UiShortcutConfig;
+    ondblclick?: (config: UiShortcutConfig) => void;
+    onclick?: (config: UiShortcutConfig) => void;
+    variant?: 'ghost' | 'primary';
   }>();
 </script>
 
-<button class="shortcut" ondblclick={() => ondblclick?.(config)} onclick={() => onclick?.(config)}>
+<button class="shortcut" class:primary={variant === 'primary'} ondblclick={() => ondblclick?.(config)} onclick={() => onclick?.(config)}>
   {#if config.icon.includes('/')}
     <img src={config.icon} alt={config.label} class="shortcut-icon-img" />
   {:else}
@@ -42,9 +43,16 @@
   .shortcut:hover {
     background: rgba(255, 255, 255, 0.12);
   }
-
   .shortcut:active {
     background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Light variant — для светлого фона */
+  .shortcut.primary:hover {
+    background: rgba(74, 144, 217, 0.1);
+  }
+  .shortcut.primary:active {
+    background: rgba(74, 144, 217, 0.18);
   }
 
   .shortcut-icon {
@@ -71,5 +79,12 @@
     text-overflow: ellipsis;
     max-width: 100%;
     pointer-events: none;
+  }
+  .shortcut.primary .shortcut-label {
+    color: #222;
+    text-shadow: none;
+  }
+  .shortcut.primary .shortcut-icon {
+    filter: none;
   }
 </style>

@@ -12,7 +12,7 @@
   import UiButtonGroup from '$lib/components/UiButtonGroup.svelte';
   import UiGrid from '$lib/components/UiGrid.svelte';
   import UiGridCell from '$lib/components/UiGridCell.svelte';
-  import Shortcut from '$lib/components/Shortcut.svelte';
+  import UiShortcut from '$lib/components/UiShortcut.svelte';
   import Widget from '$lib/components/Widget.svelte';
 
   let { appType = 'apps' }: { appType?: 'apps' | 'widgets' } = $props();
@@ -218,7 +218,7 @@
               {@const app = appItemMap.get(item.id)}
               {#if app}
                 <UiGridCell {item}>
-                  <Shortcut
+                  <UiShortcut
                     config={{ icon: app.icon, label: app.label, app: app.id }}
                     ondblclick={() => {
                       desktop.openApp(app.id);

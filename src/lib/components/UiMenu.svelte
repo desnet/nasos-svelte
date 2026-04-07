@@ -130,7 +130,7 @@
     padding: 6px 10px 2px;
     font-size: 11px;
     font-weight: 700;
-    color: #888;
+    color: #aaa;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     user-select: none;
@@ -148,7 +148,7 @@
     padding: 5px 10px;
     border: none;
     background: none;
-    color: #2d2d2d;
+    color: inherit;
     font-size: 13px;
     font-family: inherit;
     cursor: pointer;

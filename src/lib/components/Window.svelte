@@ -181,6 +181,7 @@
     min-width: 200px;
     min-height: 120px;
     transition: box-shadow 0.15s;
+    outline: none;
   }
 
   .window.focused {

@@ -6,12 +6,12 @@
   import { widgets } from '$lib/stores/widgets.svelte';
   import type { DragItem } from '$lib/stores/drag.svelte';
   import type { GridItem } from '$lib/components/UiGrid.svelte';
-  import type { ShortcutConfig } from '$lib/components/Shortcut.svelte';
+  import type { UiShortcutConfig } from "$lib/components/UiShortcut.svelte";
   import type { WidgetConfig } from '$lib/components/Widget.svelte';
 
   // Grid components
   import UiGridCell from '$lib/components/UiGridCell.svelte';
-  import Shortcut from '$lib/components/Shortcut.svelte';
+  import UiShortcut from '$lib/components/UiShortcut.svelte';
   import Widget from '$lib/components/Widget.svelte';
 
   // Layout components
@@ -22,7 +22,7 @@
   // Window infrastructure
   import Window from '$lib/components/Window.svelte';
 
-  type DesktopItem = GridItem & { shortcut?: ShortcutConfig; widget?: WidgetConfig };
+  type DesktopItem = GridItem & { shortcut?: UiShortcutConfig; widget?: WidgetConfig };
 
   const COL = 2;
   const SPAN_W = 4;
@@ -173,7 +173,7 @@
       {#each gridItems as item (item.id)}
         <UiGridCell {item}>
           {#if item.shortcut}
-            <Shortcut
+            <UiShortcut
               config={item.shortcut}
               ondblclick={(cfg) => desktop.openApp(cfg.app, cfg.args)}
             />

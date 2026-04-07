@@ -36,17 +36,20 @@
     cellW = 22,
     cellH = 22,
     items,
+    selectable = 'none',
     onMove,
     onResize,
     onDrop,
     onItemDragOut,
     onGhostOut,
     onGhostIn,
+    onselect,
     children
   } = $props<{
     cellW?: number;
     cellH?: number;
     items: GridItem[];
+    selectable?: 'none' | 'single' | 'multi';
     onMove?: (id: number, col: number, row: number) => void;
     onResize?: (id: number, colSpan: number, rowSpan: number) => void;
     onDrop?: (items: DragItem[], col: number, row: number) => void;
@@ -60,8 +63,40 @@
       adopt: () => HTMLDivElement | null
     ) => void;
     onGhostIn?: (item: GridItem) => void;
+    onselect?: (selected: GridItem[]) => void;
     children: Snippet;
   }>();
+
+  // ── Selection ────────────────────────────────────────────────────────────────
+  let selectedIds = $state<Set<number>>(new Set());
+
+  function handleCellClick(item: GridItem, e: MouseEvent) {
+    if (selectable === 'none') return;
+
+    const id = item.id;
+    const alreadySelected = selectedIds.has(id);
+
+    if (selectable === 'single') {
+      selectedIds = alreadySelected ? new Set() : new Set([id]);
+    } else {
+      // multi
+      const next = new Set(selectedIds);
+      if (e.shiftKey) {
+        if (alreadySelected) next.delete(id);
+        else next.add(id);
+      } else {
+        if (alreadySelected && next.size === 1) next.clear();
+        else { next.clear(); next.add(id); }
+      }
+      selectedIds = next;
+    }
+
+    onselect?.(items.filter((i: GridItem) => selectedIds.has(i.id)));
+  }
+
+  function isSelected(id: number) {
+    return selectedIds.has(id);
+  }
 
   let containerEl = $state<HTMLDivElement | undefined>(undefined);
   let containerW = $state(0);
@@ -232,18 +267,13 @@
     isDragging,
     applyResize,
     isResizeValid,
-    get cellW() {
-      return cellW;
-    },
-    get cellH() {
-      return cellH;
-    },
-    get cols() {
-      return cols;
-    },
-    get rows() {
-      return rows;
-    }
+    handleCellClick,
+    isSelected,
+    get selectable() { return selectable; },
+    get cellW() { return cellW; },
+    get cellH() { return cellH; },
+    get cols() { return cols; },
+    get rows() { return rows; }
   });
 
   // Сброс gridDrag если элемент был consume-ован (onUp не вызывается)

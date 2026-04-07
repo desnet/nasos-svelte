@@ -14,6 +14,9 @@
     isDragging: (id: number) => boolean;
     applyResize: (item: GridItem, colSpan: number, rowSpan: number) => void;
     isResizeValid: (item: GridItem, colSpan: number, rowSpan: number) => boolean;
+    handleCellClick: (item: GridItem, e: MouseEvent) => void;
+    isSelected: (id: number) => boolean;
+    selectable: 'none' | 'single' | 'multi';
     cellW: number;
     cellH: number;
     cols: number;
@@ -29,21 +32,26 @@
     e.preventDefault();
     pending = { startX: e.clientX, startY: e.clientY };
     window.addEventListener('mousemove', onPendingMove);
-    window.addEventListener('mouseup', cancelPending);
+    window.addEventListener('mouseup', onPendingUp);
   }
 
   function onPendingMove(e: MouseEvent) {
     if (!pending) return;
     if (Math.hypot(e.clientX - pending.startX, e.clientY - pending.startY) >= DRAG_THRESHOLD) {
       grid.startDrag(item, pending.startX, pending.startY);
-      cancelPending();
+      cancelPending(false);
     }
   }
 
-  function cancelPending() {
+  function onPendingUp(e: MouseEvent) {
+    if (pending) grid.handleCellClick(item, e);
+    cancelPending(false);
+  }
+
+  function cancelPending(triggerClick = false) {
     pending = null;
     window.removeEventListener('mousemove', onPendingMove);
-    window.removeEventListener('mouseup', cancelPending);
+    window.removeEventListener('mouseup', onPendingUp);
   }
 
   // ── Resize ───────────────────────────────────────────────────────────────────
@@ -117,6 +125,8 @@
 <div
   class="cell"
   class:dragging={grid.isDragging(item.id)}
+  class:selected={grid.isSelected(item.id)}
+  class:selectable={grid.selectable !== 'none'}
   class:resize-active={resizing !== null}
   class:resize-invalid={resizing !== null && !resizing.valid}
   style="
@@ -154,6 +164,7 @@
       opacity 0.15s,
       background 0.12s;
     overflow: hidden;
+    outline: none;
   }
 
   .cell:hover {
@@ -162,6 +173,14 @@
 
   .cell.dragging {
     opacity: 0.4;
+  }
+
+  .cell.selectable {
+    cursor: default;
+  }
+
+  .cell.selected {
+    background: rgba(74, 144, 217, 0.18) !important;
   }
 
   .cell.resize-active {
