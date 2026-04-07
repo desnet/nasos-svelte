@@ -3,7 +3,7 @@
 
   let {
     variant = 'primary',
-    size = 'md',
+    size = 'md' as 'sm' | 'md' | 'lg',
     iconPosition = 'left',
     disabled = false,
     onclick,
@@ -11,7 +11,7 @@
     children
   } = $props<{
     variant?: 'primary' | 'secondary' | 'danger';
-    size?: 'md' | 'sm';
+    size?: 'sm' | 'md' | 'lg';
     iconPosition?: 'left' | 'right';
     disabled?: boolean;
     onclick?: (e: MouseEvent) => void;
@@ -50,13 +50,20 @@
   }
 
   /* Sizes */
+  .btn.sm {
+    height: 22px;
+    padding: 0 10px;
+    font-size: 11px;
+  }
   .btn.md {
-    padding: 6px 14px;
+    height: 28px;
+    padding: 0 14px;
     font-size: 12px;
   }
-  .btn.sm {
-    padding: 4px 10px;
-    font-size: 11px;
+  .btn.lg {
+    height: 36px;
+    padding: 0 20px;
+    font-size: 14px;
   }
 
   /* Variants */

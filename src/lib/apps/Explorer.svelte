@@ -7,6 +7,7 @@
   import type { MenuItem } from '$lib/components/UiMenu.js'
   import UiPanels from '$lib/components/UiPanels.svelte'
   import UiSidebar from '$lib/components/UiSidebar.svelte'
+  import UiButton from '$lib/components/UiButton.svelte'
 
   getContext<WindowContext>('window').setSize(860, 520)
 
@@ -238,16 +239,16 @@
         <!-- Toolbar -->
         <div class="toolbar">
           <div class="nav-btns">
-            <button class="nav-btn" onclick={goBack} disabled={historyIdx <= 0} title="Назад">
+            <UiButton variant="secondary" size="sm" disabled={historyIdx <= 0} onclick={goBack}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-            </button>
-            <button class="nav-btn" onclick={goForward} disabled={historyIdx >= history.length - 1} title="Вперёд">
+            </UiButton>
+            <UiButton variant="secondary" size="sm" disabled={historyIdx >= history.length - 1} onclick={goForward}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M5 2L10 7L5 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-            </button>
+            </UiButton>
           </div>
 
           <!-- Breadcrumb -->
@@ -263,11 +264,15 @@
           <!-- View toggle & search -->
           <div class="toolbar-right">
             <UiButtonGroup
+              inline
+              size='sm'
               items={['⊞', '☰']}
               value={viewMode === 'icons' ? '⊞' : '☰'}
               onchange={(v) => (viewMode = v === '⊞' ? 'icons' : 'list')}
             />
-            <UiInputSearch bind:value={searchQuery} placeholder="Поиск" />
+            <div class="search-wrap">
+              <UiInputSearch bind:value={searchQuery} size='sm' placeholder="🔍 Поиск" />
+            </div>
           </div>
         </div>
 
@@ -373,36 +378,13 @@
     flex-shrink: 0;
   }
 
-  .nav-btn {
-    width: 26px;
-    height: 26px;
-    border: 1px solid #c8ccd8;
-    border-radius: 6px;
-    background: white;
-    color: #444;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.1s;
-    padding: 0;
-  }
-  .nav-btn:hover:not(:disabled) {
-    background: #e0e8f8;
-    border-color: #4a90d9;
-    color: #4a90d9;
-  }
-  .nav-btn:disabled {
-    opacity: 0.35;
-    cursor: default;
-  }
-
   .breadcrumb {
     flex: 1;
     display: flex;
     align-items: center;
     gap: 2px;
-    padding: 4px 10px;
+    height: 22px;
+    padding: 0 10px;
     background: white;
     border: 1px solid #c8ccd8;
     border-radius: 7px;
@@ -446,24 +428,8 @@
     flex-shrink: 0;
   }
 
-  /* Override UiButtonGroup padding for toolbar */
-  .toolbar-right :global(.btn-group) {
-    padding: 0;
-    border-bottom: none;
-    background: transparent;
-    gap: 2px;
-  }
-  .toolbar-right :global(.btn) {
-    padding: 4px 9px;
-    font-size: 13px;
-  }
-
-  /* Override UiInputSearch for toolbar */
-  .toolbar-right :global(.search) {
+  .search-wrap {
     width: 140px;
-    margin-bottom: 0;
-    padding: 4px 10px;
-    text-align: left;
   }
 
   /* ─── Content ─── */

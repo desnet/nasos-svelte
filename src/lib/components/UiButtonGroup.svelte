@@ -3,20 +3,24 @@
     items,
     value,
     onchange,
-    variant = 'default'
+    variant = 'default',
+    inline = false,
+    size = 'md'
   }: {
     items: string[];
     value: string;
     onchange?: (value: string) => void;
     variant?: 'default' | 'transparent';
+    inline?: boolean;
+    size?: 'sm' | 'md' | 'lg';
   } = $props();
 </script>
 
-<div class="btn-group" class:transparent={variant === 'transparent'}>
+<div class="btn-group" class:transparent={variant === 'transparent'} class:inline>
   {#each items as item (item)}
-    <button class="btn" class:active={value === item} onclick={() => onchange?.(item)}
-      >{item}</button
-    >
+    <button class="btn {size}" class:active={value === item} onclick={() => onchange?.(item)} data-label={item}>
+      {item}
+    </button>
   {/each}
 </div>
 
@@ -32,14 +36,40 @@
   }
 
   .btn {
-    padding: 4px 12px;
+    position: relative;
+    padding: 0 12px;
     border-radius: 20px;
     border: 1px solid #dde0ea;
     background: white;
     color: #555;
-    font-size: 12px;
     cursor: pointer;
     font-family: inherit;
+  }
+
+  /* Резервирует ширину под жирный текст чтобы кнопка не дёргалась */
+  .btn::before {
+    content: attr(data-label);
+    display: block;
+    font-weight: 600;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .btn.sm {
+    height: 22px;
+    font-size: 11px;
+    padding: 0 10px;
+  }
+  .btn.md {
+    height: 28px;
+    font-size: 12px;
+    padding: 0 12px;
+  }
+  .btn.lg {
+    height: 36px;
+    font-size: 14px;
+    padding: 0 16px;
   }
   .btn:hover {
     border-color: #4a90d9;
@@ -50,6 +80,14 @@
     border-color: #4a90d9;
     color: white;
     font-weight: 600;
+  }
+
+  /* inline — без обёртки, встраивается в тулбар */
+  .btn-group.inline {
+    padding: 0;
+    border-bottom: none;
+    background: transparent;
+    gap: 2px;
   }
 
   /* transparent */

@@ -2,16 +2,18 @@
   let {
     value = $bindable(''),
     placeholder = '🔍 Поиск...',
-    variant = 'default'
+    variant = 'default',
+    size = 'md'
   }: {
     value?: string;
     placeholder?: string;
     variant?: 'default' | 'transparent';
+    size?: 'sm' | 'md' | 'lg';
   } = $props();
 </script>
 
 <input
-  class="search"
+  class="search {size}"
   class:transparent={variant === 'transparent'}
   type="text"
   {placeholder}
@@ -20,7 +22,7 @@
 
 <style>
   .search {
-    padding: 6px 10px;
+    padding: 0 10px;
     border-radius: 20px;
     border: 1px solid #dde0ea;
     background: #f5f6fa;
@@ -32,6 +34,10 @@
     box-sizing: border-box;
     text-align: center;
   }
+  .search.sm { height: 22px; font-size: 11px; }
+  .search.md { height: 28px; font-size: 12px; }
+  .search.lg { height: 36px; font-size: 14px; }
+
   .search:focus {
     border-color: #4a90d9;
     background: white;
