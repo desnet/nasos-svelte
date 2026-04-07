@@ -8,6 +8,7 @@
   import UiPanels from '$lib/components/UiPanels.svelte';
   import UiSidebar from '$lib/components/UiSidebar.svelte';
   import type { WindowContext } from '$lib/components/Window.svelte';
+  import UiBadge from '$lib/components/UiBadge.svelte';
 
   getContext<WindowContext>('window').setSize(780, 520);
 
@@ -82,7 +83,7 @@
             <h2>{detail.name}</h2>
             <div class="detail-meta">
               <span class="author">{detail.author}</span>
-              <span class="cat-badge">{detail.category}</span>
+              <UiBadge variant="primary">{detail.category}</UiBadge>
             </div>
             <div class="rating">
               <span class="stars">{stars(detail.rating)}</span>
@@ -487,14 +488,6 @@
     font-size: 12px;
     color: #888;
   }
-  .cat-badge {
-    font-size: 10px;
-    background: #eef0f8;
-    color: #4a90d9;
-    padding: 2px 8px;
-    border-radius: 10px;
-  }
-
   .rating {
     display: flex;
     align-items: center;
