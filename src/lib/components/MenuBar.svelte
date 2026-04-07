@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { auth } from '$lib/stores/auth.svelte'
+  import { goto } from '$app/navigation'
+
   let now = $state(new Date());
   setInterval(() => {
     now = new Date();
@@ -8,11 +11,21 @@
   const dateStr = $derived(
     now.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' })
   );
+
+  function handleLogout() {
+    auth.logout()
+    goto('/login')
+  }
 </script>
 
 <div class="menubar">
   <span class="menubar-logo">NasOS</span>
   <div class="menubar-tray">
+    <button class="tray-user" onclick={handleLogout} title="Выйти из системы">
+      <span class="user-avatar">{auth.avatar}</span>
+      <span class="user-name">{auth.username}</span>
+    </button>
+    <span class="tray-sep"></span>
     <span class="tray-icon" title="Сеть">🌐</span>
     <span class="tray-icon" title="Звук">🔊</span>
     <div class="menubar-clock">
@@ -48,6 +61,42 @@
     display: flex;
     align-items: center;
     gap: 12px;
+  }
+
+  .tray-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.75);
+    font-family: inherit;
+    padding: 2px 7px;
+    border-radius: 5px;
+    height: 22px;
+    transition: background 0.12s, color 0.12s;
+  }
+
+  .tray-user:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .user-avatar {
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  .user-name {
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .tray-sep {
+    width: 1px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.12);
   }
 
   .tray-icon {
