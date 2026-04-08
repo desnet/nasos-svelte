@@ -38,7 +38,7 @@
   const interval = setInterval(() => tick++, 1000)
   $effect(() => () => clearInterval(interval))
 
-  const liveNow = $derived(() => { tick; return clockStore.now() })
+  const liveNow = $derived(() => { void tick; return clockStore.now() })
 
   // Форматирование для отображения
   const displayTime = $derived(
@@ -58,9 +58,6 @@
       year: 'numeric'
     })
   )
-
-  // Поля редактирования — инициализируем из текущего времени
-  const tzNow = $derived(new Date(liveNow().toLocaleString('en-US', { timeZone: clockStore.timezone })))
 
   let editDate = $state(formatDateInput(new Date()))
   let editTime = $state(formatTimeInput(new Date()))
