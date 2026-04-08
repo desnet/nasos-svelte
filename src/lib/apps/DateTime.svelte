@@ -3,13 +3,15 @@
   import type { WindowContext } from '$lib/components/Window.svelte'
   import { clockStore } from '$lib/stores/clock.svelte'
   import UiButton from '$lib/components/UiButton.svelte'
+  import UiSelect from '$lib/components/UiSelect.svelte'
+  import type { UiSelectOption } from '$lib/components/UiSelect.js'
 
   const win = getContext<WindowContext>('window')
   win.setSize(460, 480)
   win.setResizable(false)
 
   // Список часовых поясов
-  const TIMEZONES = [
+  const TIMEZONES: UiSelectOption[] = [
     { label: 'Калининград (UTC+2)', value: 'Europe/Kaliningrad' },
     { label: 'Москва (UTC+3)', value: 'Europe/Moscow' },
     { label: 'Самара (UTC+4)', value: 'Europe/Samara' },
@@ -154,11 +156,7 @@
       <h3 class="section-title">Часовой пояс</h3>
       <div class="row">
         <label for="edit-tz">Пояс</label>
-        <select id="edit-tz" bind:value={editTz}>
-          {#each TIMEZONES as tz (tz.value)}
-            <option value={tz.value}>{tz.label}</option>
-          {/each}
-        </select>
+        <UiSelect bind:value={editTz} options={TIMEZONES} />
       </div>
     </section>
 
@@ -261,8 +259,7 @@
     flex-shrink: 0;
   }
 
-  .row input,
-  .row select {
+  .row input {
     flex: 1;
     height: 30px;
     padding: 0 10px;
@@ -276,8 +273,7 @@
     transition: border-color 0.15s;
   }
 
-  .row input:focus,
-  .row select:focus {
+  .row input:focus {
     border-color: #4a90d9;
   }
 
