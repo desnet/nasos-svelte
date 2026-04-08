@@ -3,7 +3,6 @@
   import { resolve } from '$app/paths'
   import { auth } from '$lib/stores/auth.svelte'
 
-  // Два шага: 'user' — выбор пользователя, 'password' — ввод пароля
   type Step = 'user' | 'password'
 
   let step = $state<Step>('user')
@@ -18,7 +17,6 @@
     e.preventDefault()
     auth.setUsername(usernameInput)
     step = 'password'
-    // фокус на поле пароля после перехода
     setTimeout(() => passwordInput?.focus(), 50)
   }
 
@@ -48,13 +46,10 @@
   <div class="bg"></div>
 
   <div class="center">
-    <!-- Аватар — всегда виден -->
     <div class="avatar">{auth.avatar}</div>
 
-    <!-- Шаг 1: выбор пользователя -->
     {#if step === 'user'}
       <form onsubmit={handleSelectUser} class="form">
-        <p class="hint">Введите имя пользователя</p>
         <div class="name-wrap">
           <input
             bind:this={nameInput}
@@ -71,9 +66,9 @@
             </svg>
           </button>
         </div>
+        <p class="hint">Введите имя пользователя</p>
       </form>
 
-    <!-- Шаг 2: ввод пароля -->
     {:else}
       <div class="username">{auth.username}</div>
 
@@ -144,7 +139,6 @@
     align-items: center;
   }
 
-  /* ─── Аватар ─── */
   .avatar {
     width: 110px;
     height: 110px;
@@ -165,14 +159,13 @@
     margin-bottom: 18px;
   }
 
-  /* ─── Форма ─── */
   .form {
     display: flex;
     flex-direction: column;
     align-items: center;
   }
 
-  /* ─── Шаг 1: поле имени ─── */
+  /* ─── Поле имени ─── */
   .name-wrap {
     position: relative;
     width: 220px;
@@ -226,7 +219,7 @@
 
   .next-btn:hover { background: rgba(255, 255, 255, 0.35); }
 
-  /* ─── Шаг 2: имя + пароль ─── */
+  /* ─── Имя пользователя (шаг 2) ─── */
   .username {
     font-size: 26px;
     font-weight: 300;
@@ -236,6 +229,7 @@
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
   }
 
+  /* ─── Поле пароля ─── */
   .password-wrap {
     position: relative;
     width: 220px;
@@ -306,6 +300,7 @@
     background: rgba(255, 60, 60, 0.1);
   }
 
+  /* ─── Подсказки ─── */
   .hint {
     margin: 10px 0 6px;
     font-size: 11px;
