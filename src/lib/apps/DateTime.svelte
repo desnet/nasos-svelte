@@ -225,7 +225,6 @@
     background: white;
     border: 1px solid #dde0ea;
     border-radius: 10px;
-    overflow: hidden;
   }
 
   .section-title {
@@ -238,6 +237,7 @@
     margin: 0;
     border-bottom: 1px solid #eef0f8;
     background: #f8f9fc;
+    border-radius: 10px 10px 0 0;
   }
 
   .row {

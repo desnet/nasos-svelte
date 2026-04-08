@@ -1,6 +1,5 @@
 <script lang="ts">
   import { tick } from 'svelte'
-
   import type { UiSelectOption } from '$lib/components/UiSelect.js'
 
   let {
@@ -18,7 +17,8 @@
   let open = $state(false)
   let search = $state('')
   let searchInput = $state<HTMLInputElement | null>(null)
-  let container = $state<HTMLDivElement | null>(null)
+  let wrapper = $state<HTMLDivElement | null>(null)
+  let optionsList = $state<HTMLDivElement | null>(null)
   let activeIdx = $state(-1)
 
   const selectedLabel = $derived(
@@ -36,9 +36,14 @@
   async function openDropdown() {
     open = true
     search = ''
-    activeIdx = filtered.findIndex((o) => o.value === value)
+    activeIdx = options.findIndex((o) => o.value === value)
     await tick()
     searchInput?.focus()
+    // скроллим к выбранному элементу
+    tick().then(() => {
+      const el = optionsList?.querySelector<HTMLElement>('.opt.selected')
+      el?.scrollIntoView({ block: 'nearest' })
+    })
   }
 
   function close() {
@@ -52,14 +57,14 @@
     close()
   }
 
-  function handleKeydown(e: KeyboardEvent) {
-    if (!open) {
-      if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
-        e.preventDefault()
-        openDropdown()
-      }
-      return
+  function handleTriggerKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+      e.preventDefault()
+      openDropdown()
     }
+  }
+
+  function handleSearchKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') { close(); return }
     if (e.key === 'ArrowDown') {
       e.preventDefault()
@@ -81,13 +86,13 @@
 
   function scrollActiveIntoView() {
     tick().then(() => {
-      const el = container?.querySelector<HTMLElement>('.opt.active')
+      const el = optionsList?.querySelector<HTMLElement>('.opt.active')
       el?.scrollIntoView({ block: 'nearest' })
     })
   }
 
   function handleOutsideClick(e: MouseEvent) {
-    if (container && !container.contains(e.target as Node)) {
+    if (open && wrapper && !wrapper.contains(e.target as Node)) {
       close()
     }
   }
@@ -95,20 +100,20 @@
 
 <svelte:document onclick={handleOutsideClick} />
 
-<div class="ui-select {size}" bind:this={container}>
+<div class="ui-select {size}" bind:this={wrapper}>
   <!-- Trigger -->
   <button
     class="trigger"
     class:open
     type="button"
     onclick={openDropdown}
-    onkeydown={handleKeydown}
+    onkeydown={handleTriggerKeydown}
   >
-    <span class="trigger-label" class:placeholder={!value}>{selectedLabel}</span>
+    <span class="trigger-label" class:muted={!value}>{selectedLabel}</span>
     <span class="chevron" class:open>▾</span>
   </button>
 
-  <!-- Dropdown -->
+  <!-- Dropdown — рендерится поверх overflow:hidden родителей -->
   {#if open}
     <div class="dropdown">
       <div class="search-wrap">
@@ -119,10 +124,10 @@
           placeholder="Поиск..."
           bind:value={search}
           oninput={handleSearchInput}
-          onkeydown={handleKeydown}
+          onkeydown={handleSearchKeydown}
         />
       </div>
-      <div class="options" bind:this={container} role="listbox">
+      <div class="options" bind:this={optionsList} role="listbox">
         {#if filtered.length === 0}
           <div class="no-results">Ничего не найдено</div>
         {:else}
@@ -149,6 +154,7 @@
     position: relative;
     width: 100%;
     font-family: inherit;
+    /* поднимаем z-index когда открыт чтобы dropdown был поверх соседних элементов */
   }
 
   /* ─── Trigger ─── */
@@ -185,7 +191,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .trigger-label.placeholder { color: #aaa; }
+  .trigger-label.muted { color: #aaa; }
 
   .chevron {
     font-size: 11px;
@@ -206,8 +212,8 @@
     background: white;
     border: 1px solid #dde0ea;
     border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+    z-index: 9999;
     overflow: hidden;
   }
 
@@ -235,7 +241,7 @@
 
   /* ─── Options ─── */
   .options {
-    max-height: 220px;
+    max-height: 200px;
     overflow-y: auto;
     padding: 4px 0;
   }
@@ -263,8 +269,10 @@
   .opt.selected {
     color: #4a90d9;
     font-weight: 600;
+    background: #f5f8ff;
   }
-  .opt.selected.active { background: #e8f0ff; }
+  .opt.selected.active,
+  .opt.selected:hover { background: #e8f0ff; }
 
   .no-results {
     padding: 10px 12px;
