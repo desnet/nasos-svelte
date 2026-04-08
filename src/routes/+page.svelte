@@ -134,6 +134,14 @@
       shortcut: { icon: '🖼️', label: 'Обои', app: 'wallpapers' }
     },
     {
+      id: 9,
+      col: COL,
+      row: shortcutRow(6),
+      colSpan: SPAN_W,
+      rowSpan: SPAN_H,
+      shortcut: { icon: '🕐', label: 'Дата и время', app: 'datetime' }
+    },
+    {
       id: 7,
       col: 8,
       row: 2,

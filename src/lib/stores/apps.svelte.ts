@@ -7,6 +7,7 @@ const APPS_META: { id: string; label: string; icon: string }[] = [
   { id: 'about', label: 'Обо мне', icon: '💻' },
   { id: 'appstore', label: 'Магазин приложений', icon: '🏪' },
   { id: 'wallpapers', label: 'Обои рабочего стола', icon: '🖼️' },
+  { id: 'datetime', label: 'Дата и время', icon: '🕐' },
   { id: 'launcher', label: 'Лаунчер', icon: '' }
 ];
 
