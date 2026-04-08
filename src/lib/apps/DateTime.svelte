@@ -2,6 +2,7 @@
   import { getContext } from 'svelte'
   import type { WindowContext } from '$lib/components/Window.svelte'
   import { clockStore } from '$lib/stores/clock.svelte'
+  import UiButton from '$lib/components/UiButton.svelte'
 
   getContext<WindowContext>('window').setSize(520, 420)
 
@@ -164,10 +165,8 @@
 
     <!-- Кнопки -->
     <div class="actions">
-      <button class="btn-reset" onclick={reset}>Сбросить</button>
-      <button class="btn-apply" onclick={apply}>
-        {saved ? '✓ Применено' : 'Применить'}
-      </button>
+      <UiButton variant="secondary" onclick={reset}>Сбросить</UiButton>
+      <UiButton onclick={apply}>{saved ? '✓ Применено' : 'Применить'}</UiButton>
     </div>
   </div>
 </div>
@@ -291,37 +290,4 @@
     padding-bottom: 4px;
   }
 
-  .btn-reset,
-  .btn-apply {
-    height: 30px;
-    padding: 0 16px;
-    border-radius: 7px;
-    font-size: 13px;
-    font-family: inherit;
-    cursor: pointer;
-    font-weight: 500;
-    transition: background 0.12s, border-color 0.12s;
-  }
-
-  .btn-reset {
-    background: white;
-    border: 1px solid #c8ccd8;
-    color: #555;
-  }
-
-  .btn-reset:hover {
-    background: #f0f1f5;
-    border-color: #aaa;
-  }
-
-  .btn-apply {
-    background: #4a90d9;
-    border: 1px solid #357abd;
-    color: white;
-    min-width: 110px;
-  }
-
-  .btn-apply:hover {
-    background: #357abd;
-  }
 </style>
