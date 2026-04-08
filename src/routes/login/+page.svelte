@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation'
+  import { resolve } from '$app/paths'
   import { auth } from '$lib/stores/auth.svelte'
 
   let password = $state('')
@@ -11,9 +12,8 @@
     e.preventDefault()
     loading = true
     error = false
-    const ok = auth.login(password)
-    if (ok) {
-      await goto('/')
+    if (auth.login(password)) {
+      await goto(resolve('/'))
     } else {
       error = true
       loading = false
@@ -21,30 +21,19 @@
       passwordInput?.focus()
     }
   }
-
-  function handleShake() {
-    if (error) return 'shake'
-    return ''
-  }
 </script>
 
 <div class="screen">
-  <!-- Размытый фоновый слой -->
   <div class="bg"></div>
 
   <div class="center">
-    <!-- Аватар -->
     <div class="avatar">{auth.avatar}</div>
-
-    <!-- Имя пользователя -->
     <div class="username">{auth.username}</div>
 
-    <!-- Форма пароля -->
     <form onsubmit={handleSubmit} class="form">
       <div class="password-wrap" class:shake={error}>
         <input
           bind:this={passwordInput}
-          id="password"
           type="password"
           bind:value={password}
           placeholder="Введите пароль"
@@ -62,10 +51,9 @@
     </form>
   </div>
 
-  <!-- Время внизу -->
   <div class="bottom-bar">
-    <span class="restart">↺ Перезагрузить</span>
-    <span class="sleep">⏾ Сон</span>
+    <span class="bottom-btn">↺ Перезагрузить</span>
+    <span class="bottom-btn">⏾ Сон</span>
   </div>
 </div>
 
@@ -88,7 +76,6 @@
     overflow: hidden;
   }
 
-  /* Фон — такой же градиент как обои night-blue */
   .bg {
     position: absolute;
     inset: 0;
@@ -99,17 +86,14 @@
     z-index: 0;
   }
 
-  /* Контент */
   .center {
     position: relative;
     z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0;
   }
 
-  /* Аватар */
   .avatar {
     width: 110px;
     height: 110px;
@@ -130,7 +114,6 @@
     margin-bottom: 18px;
   }
 
-  /* Имя */
   .username {
     font-size: 26px;
     font-weight: 300;
@@ -140,15 +123,12 @@
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
   }
 
-  /* Форма */
   .form {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0;
   }
 
-  /* Поле пароля */
   .password-wrap {
     position: relative;
     width: 220px;
@@ -176,7 +156,6 @@
   .password-wrap input::placeholder {
     color: rgba(255, 255, 255, 0.4);
     font-weight: 300;
-    letter-spacing: 0.3px;
   }
 
   .password-wrap input:focus {
@@ -185,7 +164,6 @@
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
   }
 
-  /* Кнопка стрелка */
   .arrow-btn {
     position: absolute;
     right: 4px;
@@ -205,15 +183,9 @@
     padding: 0;
   }
 
-  .arrow-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.35);
-  }
+  .arrow-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.35); }
+  .arrow-btn:disabled { opacity: 0.4; }
 
-  .arrow-btn:disabled {
-    opacity: 0.4;
-  }
-
-  /* Анимация тряски при неверном пароле */
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
     15%       { transform: translateX(-8px); }
@@ -224,16 +196,12 @@
     90%       { transform: translateX(3px); }
   }
 
-  .password-wrap.shake {
-    animation: shake 0.45s ease;
-  }
-
+  .password-wrap.shake { animation: shake 0.45s ease; }
   .password-wrap.shake input {
     border-color: rgba(255, 80, 80, 0.7);
     background: rgba(255, 60, 60, 0.1);
   }
 
-  /* Подсказка */
   .hint {
     margin: 10px 0 0;
     font-size: 11px;
@@ -241,7 +209,6 @@
     font-weight: 300;
   }
 
-  /* Нижняя панель */
   .bottom-bar {
     position: absolute;
     bottom: 28px;
@@ -253,8 +220,7 @@
     z-index: 1;
   }
 
-  .restart,
-  .sleep {
+  .bottom-btn {
     font-size: 12px;
     color: rgba(255, 255, 255, 0.45);
     cursor: pointer;
@@ -262,8 +228,5 @@
     transition: color 0.12s;
   }
 
-  .restart:hover,
-  .sleep:hover {
-    color: rgba(255, 255, 255, 0.75);
-  }
+  .bottom-btn:hover { color: rgba(255, 255, 255, 0.75); }
 </style>
