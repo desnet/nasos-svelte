@@ -54,6 +54,7 @@
     <!-- Шаг 1: выбор пользователя -->
     {#if step === 'user'}
       <form onsubmit={handleSelectUser} class="form">
+        <p class="hint">Введите имя пользователя</p>
         <div class="name-wrap">
           <input
             bind:this={nameInput}
