@@ -4,7 +4,9 @@
   import { clockStore } from '$lib/stores/clock.svelte'
   import UiButton from '$lib/components/UiButton.svelte'
 
-  getContext<WindowContext>('window').setSize(520, 420)
+  const win = getContext<WindowContext>('window')
+  win.setSize(460, 480)
+  win.setResizable(false)
 
   // Список часовых поясов
   const TIMEZONES = [

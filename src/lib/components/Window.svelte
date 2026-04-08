@@ -6,6 +6,7 @@
   export type WindowContext = {
     id: number;
     setSize: (width: number, height: number) => void;
+    setResizable: (resizable: boolean) => void;
   };
 
   let { id, children } = $props<{ id: number; children: Snippet }>();
@@ -14,6 +15,9 @@
     get id() { return id; },
     setSize(width, height) {
       desktop.resizeWindow(id, width, height);
+    },
+    setResizable(value) {
+      desktop.setWindowOptions(id, { resizable: value });
     }
   });
 

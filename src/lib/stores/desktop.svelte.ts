@@ -132,6 +132,12 @@ function createDesktop() {
     });
   }
 
+  function setWindowOptions(id: number, opts: Partial<WindowOptions>) {
+    windows = windows.map((w) =>
+      w.id === id ? { ...w, options: { ...w.options, ...opts } } : w
+    );
+  }
+
   function getZIndex(id: number) {
     const win = windows.find((w) => w.id === id);
     if (win?.options?.overlay) return 9001;
@@ -150,6 +156,7 @@ function createDesktop() {
     toggleMaximize,
     moveWindow,
     resizeWindow,
+    setWindowOptions,
     getZIndex
   };
 }
