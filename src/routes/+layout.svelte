@@ -1,12 +1,20 @@
 <script lang="ts">
   import favicon from '$lib/assets/favicon.svg'
   import { auth } from '$lib/stores/auth.svelte'
-  import { goto, afterNavigate } from '$app/navigation'
+  import { goto } from '$app/navigation'
+  import { onMount } from 'svelte'
+  import { page } from '$app/stores'
 
   let { children } = $props()
 
-  afterNavigate(({ to }) => {
-    if (!auth.loggedIn && to?.url.pathname !== '/login') {
+  let mounted = $state(false)
+
+  onMount(() => {
+    mounted = true
+  })
+
+  $effect(() => {
+    if (mounted && !auth.loggedIn && $page.url.pathname !== '/login') {
       goto('/login')
     }
   })
