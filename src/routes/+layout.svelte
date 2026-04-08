@@ -1,16 +1,13 @@
 <script lang="ts">
   import favicon from '$lib/assets/favicon.svg'
   import { auth } from '$lib/stores/auth.svelte'
-  import { goto } from '$app/navigation'
-  import { page } from '$app/stores'
-  import { browser } from '$app/environment'
-  import { tick } from 'svelte'
+  import { goto, afterNavigate } from '$app/navigation'
 
   let { children } = $props()
 
-  $effect(() => {
-    if (browser && !auth.loggedIn && $page.url.pathname !== '/login') {
-      tick().then(() => goto('/login'))
+  afterNavigate(({ to }) => {
+    if (!auth.loggedIn && to?.url.pathname !== '/login') {
+      goto('/login')
     }
   })
 </script>
