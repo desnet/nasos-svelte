@@ -148,7 +148,7 @@
       colSpan: 10,
       rowSpan: 11,
       resizable: true,
-      widget: { name: 'clock', app: 'clock' }
+      widget: { name: 'clock', app: 'datetime' }
     },
     {
       id: 8,
