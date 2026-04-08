@@ -64,12 +64,12 @@
             spellcheck="false"
             autofocus
           />
+          <button type="submit" class="next-btn">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
-        <button type="submit" class="next-btn">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
       </form>
 
     <!-- Шаг 2: ввод пароля -->
@@ -175,20 +175,18 @@
   .name-wrap {
     position: relative;
     width: 220px;
-    margin-bottom: 12px;
   }
 
   .name-input {
     width: 100%;
     height: 34px;
-    padding: 0 14px;
+    padding: 0 38px 0 14px;
     box-sizing: border-box;
     border-radius: 17px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.12);
     color: white;
-    font-size: 15px;
-    font-weight: 300;
+    font-size: 13px;
     font-family: inherit;
     outline: none;
     backdrop-filter: blur(16px);
@@ -198,35 +196,34 @@
     letter-spacing: 0.3px;
   }
 
-  .name-input::placeholder { color: rgba(255, 255, 255, 0.35); }
+  .name-input::placeholder { color: rgba(255, 255, 255, 0.4); font-weight: 300; }
 
   .name-input:focus {
-    border-color: rgba(255, 255, 255, 0.55);
-    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.16);
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
   }
 
   .next-btn {
-    width: 36px;
-    height: 36px;
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: background 0.12s, border-color 0.12s;
+    transition: background 0.12s;
     padding: 0;
   }
 
-  .next-btn:hover {
-    background: rgba(255, 255, 255, 0.28);
-    border-color: rgba(255, 255, 255, 0.5);
-  }
+  .next-btn:hover { background: rgba(255, 255, 255, 0.35); }
 
   /* ─── Шаг 2: имя + пароль ─── */
   .username {
