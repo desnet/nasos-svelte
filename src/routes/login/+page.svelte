@@ -2,63 +2,70 @@
   import { goto } from '$app/navigation'
   import { auth } from '$lib/stores/auth.svelte'
 
-  let username = $state(auth.username)
   let password = $state('')
-  let error = $state('')
+  let error = $state(false)
   let loading = $state(false)
+  let passwordInput = $state<HTMLInputElement | null>(null)
 
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault()
     loading = true
-    error = ''
+    error = false
     const ok = auth.login(password)
     if (ok) {
       await goto('/')
     } else {
-      error = 'Неверный пароль'
+      error = true
       loading = false
+      password = ''
+      passwordInput?.focus()
     }
+  }
+
+  function handleShake() {
+    if (error) return 'shake'
+    return ''
   }
 </script>
 
-<div class="login-screen">
-  <div class="login-card">
-    <div class="login-avatar">{auth.avatar}</div>
-    <h1 class="login-title">NasOS</h1>
-    <p class="login-subtitle">Добро пожаловать</p>
+<div class="screen">
+  <!-- Размытый фоновый слой -->
+  <div class="bg"></div>
 
-    <form onsubmit={handleSubmit}>
-      <div class="field">
-        <label for="username">Пользователь</label>
+  <div class="center">
+    <!-- Аватар -->
+    <div class="avatar">{auth.avatar}</div>
+
+    <!-- Имя пользователя -->
+    <div class="username">{auth.username}</div>
+
+    <!-- Форма пароля -->
+    <form onsubmit={handleSubmit} class="form">
+      <div class="password-wrap" class:shake={error}>
         <input
-          id="username"
-          type="text"
-          bind:value={username}
-          autocomplete="username"
-          spellcheck="false"
-        />
-      </div>
-      <div class="field">
-        <label for="password">Пароль</label>
-        <input
+          bind:this={passwordInput}
           id="password"
           type="password"
           bind:value={password}
-          autocomplete="current-password"
           placeholder="Введите пароль"
+          autocomplete="current-password"
+          autofocus
+          onanimationend={() => (error = false)}
         />
+        <button type="submit" class="arrow-btn" disabled={loading} tabindex="-1">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
-
-      {#if error}
-        <p class="error">{error}</p>
-      {/if}
-
-      <button type="submit" class="btn-login" disabled={loading}>
-        {loading ? 'Вход...' : 'Войти'}
-      </button>
+      <p class="hint">Демо · любой пароль</p>
     </form>
+  </div>
 
-    <p class="demo-hint">Демо-режим · любой пароль</p>
+  <!-- Время внизу -->
+  <div class="bottom-bar">
+    <span class="restart">↺ Перезагрузить</span>
+    <span class="sleep">⏾ Сон</span>
   </div>
 </div>
 
@@ -67,129 +74,196 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
   }
 
-  .login-screen {
+  .screen {
     width: 100vw;
     height: 100vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #1a3a5c 0%, #0d2137 40%, #1a2d4a 70%, #0a1a2e 100%);
+    position: relative;
+    overflow: hidden;
   }
 
-  .login-card {
-    width: 340px;
-    padding: 40px 36px 32px;
-    background: rgba(30, 30, 46, 0.82);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
-    color: white;
-    text-align: center;
+  /* Фон — такой же градиент как обои night-blue */
+  .bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(60, 120, 200, 0.35) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 80%, rgba(80, 40, 160, 0.3) 0%, transparent 55%),
+      linear-gradient(160deg, #0d1b2e 0%, #0a1628 40%, #12102a 70%, #0a0a1e 100%);
+    z-index: 0;
   }
 
-  .login-avatar {
-    font-size: 56px;
-    margin-bottom: 12px;
+  /* Контент */
+  .center {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  /* Аватар */
+  .avatar {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    border: 3px solid rgba(255, 255, 255, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 54px;
     line-height: 1;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      0 2px 8px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    margin-bottom: 18px;
   }
 
-  .login-title {
-    font-size: 22px;
-    font-weight: 700;
-    margin: 0 0 4px;
-    color: rgba(255, 255, 255, 0.95);
+  /* Имя */
+  .username {
+    font-size: 26px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.92);
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Форма */
+  .form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  /* Поле пароля */
+  .password-wrap {
+    position: relative;
+    width: 220px;
+  }
+
+  .password-wrap input {
+    width: 100%;
+    height: 34px;
+    padding: 0 38px 0 14px;
+    box-sizing: border-box;
+    border-radius: 17px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    text-align: center;
     letter-spacing: 0.3px;
   }
 
-  .login-subtitle {
+  .password-wrap input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 300;
+    letter-spacing: 0.3px;
+  }
+
+  .password-wrap input:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+  }
+
+  /* Кнопка стрелка */
+  .arrow-btn {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.12s;
+    padding: 0;
+  }
+
+  .arrow-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  .arrow-btn:disabled {
+    opacity: 0.4;
+  }
+
+  /* Анимация тряски при неверном пароле */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    15%       { transform: translateX(-8px); }
+    30%       { transform: translateX(8px); }
+    45%       { transform: translateX(-6px); }
+    60%       { transform: translateX(6px); }
+    75%       { transform: translateX(-3px); }
+    90%       { transform: translateX(3px); }
+  }
+
+  .password-wrap.shake {
+    animation: shake 0.45s ease;
+  }
+
+  .password-wrap.shake input {
+    border-color: rgba(255, 80, 80, 0.7);
+    background: rgba(255, 60, 60, 0.1);
+  }
+
+  /* Подсказка */
+  .hint {
+    margin: 10px 0 0;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.25);
+    font-weight: 300;
+  }
+
+  /* Нижняя панель */
+  .bottom-bar {
+    position: absolute;
+    bottom: 28px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    z-index: 1;
+  }
+
+  .restart,
+  .sleep {
     font-size: 12px;
     color: rgba(255, 255, 255, 0.45);
-    margin: 0 0 28px;
-  }
-
-  .field {
-    text-align: left;
-    margin-bottom: 14px;
-  }
-
-  .field label {
-    display: block;
-    font-size: 11px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.5);
-    margin-bottom: 5px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .field input {
-    width: 100%;
-    height: 36px;
-    padding: 0 12px;
-    box-sizing: border-box;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(255, 255, 255, 0.07);
-    color: white;
-    font-size: 14px;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.15s, background 0.15s;
-  }
-
-  .field input::placeholder {
-    color: rgba(255, 255, 255, 0.25);
-  }
-
-  .field input:focus {
-    border-color: rgba(74, 144, 217, 0.7);
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .error {
-    font-size: 12px;
-    color: #ff6b6b;
-    margin: -4px 0 10px;
-    text-align: left;
-  }
-
-  .btn-login {
-    width: 100%;
-    height: 40px;
-    margin-top: 6px;
-    border-radius: 8px;
-    border: none;
-    background: #4a90d9;
-    color: white;
-    font-size: 14px;
-    font-weight: 600;
     cursor: pointer;
-    font-family: inherit;
-    transition: background 0.12s, opacity 0.12s;
-    letter-spacing: 0.2px;
+    user-select: none;
+    transition: color 0.12s;
   }
 
-  .btn-login:hover:not(:disabled) {
-    background: #357abd;
-  }
-
-  .btn-login:active:not(:disabled) {
-    background: #2a6aa8;
-  }
-
-  .btn-login:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-
-  .demo-hint {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.2);
-    margin: 20px 0 0;
+  .restart:hover,
+  .sleep:hover {
+    color: rgba(255, 255, 255, 0.75);
   }
 </style>
