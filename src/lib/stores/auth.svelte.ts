@@ -13,12 +13,17 @@ function createAuth() {
     loggedIn = false
   }
 
+  function setUsername(name: string) {
+    if (name.trim()) username = name.trim()
+  }
+
   return {
     get loggedIn() { return loggedIn },
     get username() { return username },
     get avatar() { return avatar },
     login,
-    logout
+    logout,
+    setUsername
   }
 }
 

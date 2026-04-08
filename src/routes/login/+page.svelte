@@ -3,12 +3,26 @@
   import { resolve } from '$app/paths'
   import { auth } from '$lib/stores/auth.svelte'
 
+  // Два шага: 'user' — выбор пользователя, 'password' — ввод пароля
+  type Step = 'user' | 'password'
+
+  let step = $state<Step>('user')
+  let usernameInput = $state(auth.username)
   let password = $state('')
   let error = $state(false)
   let loading = $state(false)
   let passwordInput = $state<HTMLInputElement | null>(null)
+  let nameInput = $state<HTMLInputElement | null>(null)
 
-  async function handleSubmit(e: SubmitEvent) {
+  function handleSelectUser(e: SubmitEvent) {
+    e.preventDefault()
+    auth.setUsername(usernameInput)
+    step = 'password'
+    // фокус на поле пароля после перехода
+    setTimeout(() => passwordInput?.focus(), 50)
+  }
+
+  async function handlePassword(e: SubmitEvent) {
     e.preventDefault()
     loading = true
     error = false
@@ -21,34 +35,69 @@
       passwordInput?.focus()
     }
   }
+
+  function backToUser() {
+    step = 'user'
+    password = ''
+    error = false
+    setTimeout(() => nameInput?.focus(), 50)
+  }
 </script>
 
 <div class="screen">
   <div class="bg"></div>
 
   <div class="center">
+    <!-- Аватар — всегда виден -->
     <div class="avatar">{auth.avatar}</div>
-    <div class="username">{auth.username}</div>
 
-    <form onsubmit={handleSubmit} class="form">
-      <div class="password-wrap" class:shake={error}>
-        <input
-          bind:this={passwordInput}
-          type="password"
-          bind:value={password}
-          placeholder="Введите пароль"
-          autocomplete="current-password"
-          autofocus
-          onanimationend={() => (error = false)}
-        />
-        <button type="submit" class="arrow-btn" disabled={loading} tabindex="-1">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Шаг 1: выбор пользователя -->
+    {#if step === 'user'}
+      <form onsubmit={handleSelectUser} class="form">
+        <div class="name-wrap">
+          <input
+            bind:this={nameInput}
+            class="name-input"
+            type="text"
+            bind:value={usernameInput}
+            autocomplete="username"
+            spellcheck="false"
+            autofocus
+          />
+        </div>
+        <button type="submit" class="next-btn">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
-      </div>
-      <p class="hint">Демо · любой пароль</p>
-    </form>
+      </form>
+
+    <!-- Шаг 2: ввод пароля -->
+    {:else}
+      <div class="username">{auth.username}</div>
+
+      <form onsubmit={handlePassword} class="form">
+        <div class="password-wrap" class:shake={error}>
+          <input
+            bind:this={passwordInput}
+            type="password"
+            bind:value={password}
+            placeholder="Пароль"
+            autocomplete="current-password"
+            onanimationend={() => (error = false)}
+          />
+          <button type="submit" class="arrow-btn" disabled={loading} tabindex="-1">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <p class="hint">Демо · любой пароль</p>
+        <button type="button" class="back-btn" onclick={backToUser}>
+          ← Сменить пользователя
+        </button>
+      </form>
+    {/if}
   </div>
 
   <div class="bottom-bar">
@@ -94,6 +143,7 @@
     align-items: center;
   }
 
+  /* ─── Аватар ─── */
   .avatar {
     width: 110px;
     height: 110px;
@@ -114,6 +164,71 @@
     margin-bottom: 18px;
   }
 
+  /* ─── Форма ─── */
+  .form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ─── Шаг 1: поле имени ─── */
+  .name-wrap {
+    position: relative;
+    width: 220px;
+    margin-bottom: 12px;
+  }
+
+  .name-input {
+    width: 100%;
+    height: 34px;
+    padding: 0 14px;
+    box-sizing: border-box;
+    border-radius: 17px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.14);
+    color: white;
+    font-size: 15px;
+    font-weight: 300;
+    font-family: inherit;
+    outline: none;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+
+  .name-input::placeholder { color: rgba(255, 255, 255, 0.35); }
+
+  .name-input:focus {
+    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.18);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+  }
+
+  .next-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.12s, border-color 0.12s;
+    padding: 0;
+  }
+
+  .next-btn:hover {
+    background: rgba(255, 255, 255, 0.28);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* ─── Шаг 2: имя + пароль ─── */
   .username {
     font-size: 26px;
     font-weight: 300;
@@ -121,12 +236,6 @@
     letter-spacing: 0.5px;
     margin-bottom: 20px;
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
-  }
-
-  .form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
   }
 
   .password-wrap {
@@ -153,10 +262,7 @@
     letter-spacing: 0.3px;
   }
 
-  .password-wrap input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-    font-weight: 300;
-  }
+  .password-wrap input::placeholder { color: rgba(255, 255, 255, 0.4); font-weight: 300; }
 
   .password-wrap input:focus {
     border-color: rgba(255, 255, 255, 0.5);
@@ -203,12 +309,26 @@
   }
 
   .hint {
-    margin: 10px 0 0;
+    margin: 10px 0 6px;
     font-size: 11px;
     color: rgba(255, 255, 255, 0.25);
     font-weight: 300;
   }
 
+  .back-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 11px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: color 0.12s;
+  }
+
+  .back-btn:hover { color: rgba(255, 255, 255, 0.65); }
+
+  /* ─── Нижняя панель ─── */
   .bottom-bar {
     position: absolute;
     bottom: 28px;
