@@ -1,45 +1,57 @@
 <script lang="ts">
-  import { goto } from '$app/navigation'
-  import { resolve } from '$app/paths'
-  import { auth } from '$lib/stores/auth.svelte'
+  import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
+  import { auth } from '$lib/stores/auth.svelte';
 
-  type Step = 'user' | 'password'
+  type Step = 'user' | 'password';
 
-  let step = $state<Step>('user')
-  let usernameInput = $state(auth.username)
-  let password = $state('')
-  let error = $state(false)
-  let loading = $state(false)
-  let passwordInput = $state<HTMLInputElement | null>(null)
-  let nameInput = $state<HTMLInputElement | null>(null)
+  let step = $state<Step>('user');
+  let usernameInput = $state('');
+  let password = $state('');
+  let error = $state(false);
+  let loading = $state(false);
+  let passwordInput = $state<HTMLInputElement | null>(null);
+  let nameInput = $state<HTMLInputElement | null>(null);
 
   function handleSelectUser(e: SubmitEvent) {
-    e.preventDefault()
-    auth.setUsername(usernameInput)
-    step = 'password'
-    setTimeout(() => passwordInput?.focus(), 50)
+    e.preventDefault();
+    auth.setUsername(usernameInput || 'Пользователь');
+    step = 'password';
+    setTimeout(() => passwordInput?.focus(), 50);
   }
 
   async function handlePassword(e: SubmitEvent) {
-    e.preventDefault()
-    loading = true
-    error = false
+    e.preventDefault();
+    loading = true;
+    error = false;
     if (auth.login(password)) {
-      await goto(resolve('/'))
+      await goto(resolve('/'));
     } else {
-      error = true
-      loading = false
-      password = ''
-      passwordInput?.focus()
+      error = true;
+      loading = false;
+      password = '';
+      passwordInput?.focus();
     }
   }
 
   function backToUser() {
-    step = 'user'
-    password = ''
-    error = false
-    setTimeout(() => nameInput?.focus(), 50)
+    step = 'user';
+    password = '';
+    error = false;
+    setTimeout(() => nameInput?.focus(), 50);
   }
+
+  $effect(() => {
+    // Подавляем диалог подтверждения при перезагрузке страницы.
+    // Браузер показывает его из-за <input type="password"> с введёнными данными.
+    // Очищаем поля до выгрузки, чтобы браузер не считал форму "грязной".
+    const handler = () => {
+      if (passwordInput) passwordInput.value = '';
+      if (nameInput) nameInput.value = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  });
 </script>
 
 <div class="screen">
@@ -49,30 +61,36 @@
     <div class="avatar">{auth.avatar}</div>
 
     {#if step === 'user'}
-      <form onsubmit={handleSelectUser} class="form">
+      <form onsubmit={handleSelectUser} class="form" autocomplete="off">
         <div class="name-wrap">
           <input
             bind:this={nameInput}
             class="name-input"
             type="text"
             bind:value={usernameInput}
+            placeholder="Пользователь"
             autocomplete="username"
             spellcheck="false"
             autofocus
           />
           <button type="submit" class="next-btn">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path
+                d="M2 7h10M8 3l4 4-4 4"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </button>
         </div>
         <p class="hint">Введите имя пользователя</p>
       </form>
-
     {:else}
       <div class="username">{auth.username}</div>
 
-      <form onsubmit={handlePassword} class="form">
+      <form onsubmit={handlePassword} class="form" autocomplete="off">
         <div class="password-wrap" class:shake={error}>
           <input
             bind:this={passwordInput}
@@ -84,7 +102,13 @@
           />
           <button type="submit" class="arrow-btn" disabled={loading} tabindex="-1">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path
+                d="M3 8h10M9 4l4 4-4 4"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </button>
         </div>
@@ -185,12 +209,18 @@
     outline: none;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    transition:
+      border-color 0.15s,
+      background 0.15s,
+      box-shadow 0.15s;
     text-align: center;
     letter-spacing: 0.3px;
   }
 
-  .name-input::placeholder { color: rgba(255, 255, 255, 0.4); font-weight: 300; }
+  .name-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 300;
+  }
 
   .name-input:focus {
     border-color: rgba(255, 255, 255, 0.5);
@@ -217,7 +247,9 @@
     padding: 0;
   }
 
-  .next-btn:hover { background: rgba(255, 255, 255, 0.35); }
+  .next-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
 
   /* ─── Имя пользователя (шаг 2) ─── */
   .username {
@@ -249,12 +281,18 @@
     outline: none;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    transition:
+      border-color 0.15s,
+      background 0.15s,
+      box-shadow 0.15s;
     text-align: center;
     letter-spacing: 0.3px;
   }
 
-  .password-wrap input::placeholder { color: rgba(255, 255, 255, 0.4); font-weight: 300; }
+  .password-wrap input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 300;
+  }
 
   .password-wrap input:focus {
     border-color: rgba(255, 255, 255, 0.5);
@@ -281,20 +319,41 @@
     padding: 0;
   }
 
-  .arrow-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.35); }
-  .arrow-btn:disabled { opacity: 0.4; }
-
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    15%       { transform: translateX(-8px); }
-    30%       { transform: translateX(8px); }
-    45%       { transform: translateX(-6px); }
-    60%       { transform: translateX(6px); }
-    75%       { transform: translateX(-3px); }
-    90%       { transform: translateX(3px); }
+  .arrow-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.35);
+  }
+  .arrow-btn:disabled {
+    opacity: 0.4;
   }
 
-  .password-wrap.shake { animation: shake 0.45s ease; }
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    15% {
+      transform: translateX(-8px);
+    }
+    30% {
+      transform: translateX(8px);
+    }
+    45% {
+      transform: translateX(-6px);
+    }
+    60% {
+      transform: translateX(6px);
+    }
+    75% {
+      transform: translateX(-3px);
+    }
+    90% {
+      transform: translateX(3px);
+    }
+  }
+
+  .password-wrap.shake {
+    animation: shake 0.45s ease;
+  }
   .password-wrap.shake input {
     border-color: rgba(255, 80, 80, 0.7);
     background: rgba(255, 60, 60, 0.1);
@@ -319,7 +378,9 @@
     transition: color 0.12s;
   }
 
-  .back-btn:hover { color: rgba(255, 255, 255, 0.65); }
+  .back-btn:hover {
+    color: rgba(255, 255, 255, 0.65);
+  }
 
   /* ─── Нижняя панель ─── */
   .bottom-bar {
@@ -341,5 +402,7 @@
     transition: color 0.12s;
   }
 
-  .bottom-btn:hover { color: rgba(255, 255, 255, 0.75); }
+  .bottom-btn:hover {
+    color: rgba(255, 255, 255, 0.75);
+  }
 </style>
